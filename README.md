@@ -2,8 +2,7 @@
 
 This is a Django application for maintaining documents in YAML format and
 refining them to a traditional ORM’d database to serve them to users. It’s for
-people who prefer VCS and off-line text editors over SQL and plutonian
-web-based administrative interfaces.
+people who prefer VCS over SQL.
 
 ## Status
 
@@ -12,10 +11,6 @@ the years, with some individual YAML documents over a hundred thousand lines
 long. However, `yamldoc` is probably of no interest to you. Its architecture
 is less elegant than the average Django app, mixing various concerns united
 only by the theme of refining YAML to HTML via quearyable SQL.
-
-If you want to pick and choose code under the license, `yamldoc.util.file` is
-central. It handles wrapping and unwrapping of lines (of Markdown) in
-version-controlled YAML documents.
 
 ## History
 

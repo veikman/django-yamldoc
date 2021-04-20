@@ -20,16 +20,17 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 """
 
 from dataclasses import dataclass
-from unittest import mock
 
 import django.template.defaultfilters
-from django.core.management import call_command
 from django.test import TestCase
 
-from yamldoc.models import Document
+from yamldoc.models import Document, MarkupField
 from yamldoc.util.file import transform
-from yamldoc.util.markup import Inline, markdown_on_string
+from yamldoc.util.markup import Inline
 from yamldoc.util.misc import slugify
+from yamldoc.util.resolution import (classbased_selector, combo,
+                                     get_explicit_fields, map_resolver,
+                                     markdown_on_string)
 
 
 class _CookingMarkdown(TestCase):
@@ -149,6 +150,28 @@ class _CookingStructure(TestCase):
         self.assertEqual(ref, transform(self._PseudoModel, o))
 
 
+class _ExplicitFieldSelection(TestCase):
+    def test_absence_of_metadata(self):
+        with self.assertRaises(AttributeError):
+            get_explicit_fields(Document)
+
+
+class _ClassBasedFieldSelection(TestCase):
+    def test_minimal(self):
+        with self.assertRaises(AssertionError):
+            classbased_selector({})
+
+    def test_mismatch(self):
+        f = classbased_selector((int,))
+        self.assertEqual(f(Document), ())
+
+    def test_fair_weather(self):
+        f = classbased_selector((MarkupField,))
+        self.assertEqual(f(Document),
+                         tuple(f for f in Document._meta.fields
+                               if f.name in {'summary', 'ingress', 'body'}))
+
+
 class _CookingSite(TestCase):
 
     def test_chain(self):
@@ -162,19 +185,19 @@ class _CookingSite(TestCase):
         self.assertEqual(ref, doc.body,
                          msg='Text mutated in document creation.')
 
-        def replacement(callback, app):
-            callback(Document)
-
         # Depending on the Django project wherein yamldoc is tested,
         # traverse.app may fail to include Document.
-        # This is the only reason for patching here.
-        with mock.patch('yamldoc.management.commands.resolve_markup.'
-                        'traverse_app',
-                        new=replacement):
-            call_command('resolve_markup')
+        # TODO: Overwrite settings for testing.
+        list(map_resolver(combo))
 
-        doc.refresh_from_db()
+        # At this point, as of Django 3.2, doc.refresh_from_db() is inadequate
+        # to retrieve the value set by map_resolver(). Query instead.
+        doc = Document.objects.get(id=1)
 
+        ref = 'Cove, Oregon'
+        self.assertEqual(ref, doc.title)
+        ref = ''  # Not null.
+        self.assertEqual(ref, doc.summary)
         ref = '<p><strong>Cove</strong> is a city in Union County.</p>'
         self.assertEqual(ref, doc.body)
 

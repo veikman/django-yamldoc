@@ -22,7 +22,7 @@ import logging
 
 from django.db import models, transaction
 
-from . import util
+from yamldoc.util.misc import slugify
 
 
 class MarkupField(models.TextField):
@@ -81,7 +81,7 @@ class UploadableMixin():
             if not sluggable:
                 continue
 
-            slug = util.misc.slugify(sluggable)
+            slug = slugify(sluggable)
             try:
                 parent = cls.objects.get(slug=slug)
             except cls.DoesNotExist:
@@ -105,7 +105,7 @@ class UploadableMixin():
         Assume that any tags are to be managed as if by Taggit.
 
         """
-        slug = util.misc.slugify(title)
+        slug = slugify(title)
         new = cls.objects.create(title=title, slug=slug, **kwargs)
         if tags:
             new.tags.set(*tags)

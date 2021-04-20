@@ -23,8 +23,6 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 # IMPORTS #
 ###########
 
-import collections
-
 import django.utils.html
 import django.utils.text
 import unidecode
@@ -33,22 +31,6 @@ from django.template.defaultfilters import slugify as default_slugify
 #######################
 # INTERFACE FUNCTIONS #
 #######################
-
-
-def is_listlike(object_):
-    """Return True if object_ is an iterable container."""
-    if (isinstance(object_, collections.abc.Iterable) and
-            not isinstance(object_, str)):
-        return True
-    return False
-
-
-def is_leaf_mapping(object_):
-    """Return True if object_ is a mapping and doesn't contain mappings."""
-    if (isinstance(object_, collections.abc.Mapping) and
-            not any(map(is_leaf_mapping, object_.values()))):
-        return True
-    return False
 
 
 def slugify(string):

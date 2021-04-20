@@ -20,14 +20,29 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 """
 
 import logging
+from typing import (Callable, FrozenSet, Generator, Optional, Set, Tuple, Type,
+                    Union)
 
 import django.apps
 from django.conf import settings
+from django.db.models import Field, Model
+
+########################
+# LOCAL COMPOUND TYPES #
+########################
 
 
-# TODO: Add a generator that produces a stream of instances and their fields.
+Denylist = Set[Union[Type[Model], str]]
+Node = Tuple[Model, str, Optional[str]]
+Traversal = Generator[Node, None, None]
 
-def qualified_class_name(cls):
+
+###################
+# MINOR FUNCTIONS #
+###################
+
+
+def qualified_class_name(cls: Type) -> str:
     """Return a string uniquely identifying a class (not cls.__qualname__).
 
     Produce the same name that __str__ on a type object does, without the
@@ -41,60 +56,58 @@ def qualified_class_name(cls):
     return cls.__module__ + "." + cls.__name__
 
 
-def site(function):
-    """Apply function to all apps on current site."""
-    for app in django.apps.apps.all_models.values():
-        function(app)
+##############
+# GENERATORS #
+##############
 
 
-def app(function, app):
-    """Apply function to all models in app.
+def site(model_denylist: Optional[Denylist] = None, **kwargs) -> Traversal:
+    """Traverse fields in the database of the current site.
 
-    The app here is expected to be packaged as if by django.apps.
+    Default to denylisting and ordering according to site settings.
 
     """
-    # Support explicit ordering.
-    try:
-        order = settings.MARKUP_MODEL_ORDER
-    except AttributeError:
-        order = ()
-
-    def key(model):
+    if model_denylist is None:
         try:
-            return order.index(model)
-        except ValueError:
-            # Not listed. Treat it early.
-            return -1
+            model_denylist: Denylist = settings.MARKUP_MODEL_DENYLIST
+        except AttributeError:
+            model_denylist: Denylist = {}
 
-    for model in sorted(app.values(), key=key):
+    for app_ in django.apps.apps.all_models.values():
+        yield from app(app_, model_denylist, **kwargs)
 
-        # Support a blacklist.
+
+def app(app_, model_denylist: Denylist, namefinder=qualified_class_name,
+        field_selector=lambda x: ()) -> Traversal:
+    """Traverse fields in the database of one app.
+
+    The app here is expected to be packaged as if by site(). There is no
+    Application class in Django 3.2.
+
+    The default field_selector is effectively a no-op.
+
+    """
+    for model_ in app_.values():
         # Not skipping superclasses would create trouble with Django's
         # handling of inheritance (through a OneToOne on the child class).
-        try:
-            blacklist = settings.MARKUP_MODEL_BLACKLIST
-        except AttributeError:
-            blacklist = {}
-
-        if model in blacklist or qualified_class_name(model) in blacklist:
-            logging.debug('Not traversing {}: Blacklisted.'.format(model))
+        if model_ in model_denylist or namefinder(model) in model_denylist:
+            logging.debug(f'Not traversing {model}: Denylisted.')
             continue
 
-        function(model)
+        yield from model(model_, field_selector)
 
 
-def model(function, model, fields):
-    """Apply function to each instance of passed model."""
-    for instance in model.objects.all():
-        function(instance, fields)
+def model(model_: Type[Model],
+          field_selector: Callable[[Type[Model]],
+                                   Tuple[Type[Field]]]) -> Traversal:
+    """Traverse selected fields in the database table of passed model."""
+    assert field_selector is not None
+    field_allowlist: FrozenSet[Field] = frozenset(field_selector(model_))
+    for instance_ in model_.objects.all():
+        yield from instance(instance_, field_allowlist)
 
 
-def instance(function, instance, fields, **kwargs):
-    """Apply function to selected fields on passed instance of a model."""
-    for field in fields:
-        old = getattr(instance, field.name)
-        new = function(instance, old, **kwargs)
-        if not field.null and new is None:
-            # "The Django convention is to use the empty string...”
-            new = ''
-        setattr(instance, field.name, new)
+def instance(instance_: Model, field_allowlist: FrozenSet[Field]) -> Traversal:
+    """Traverse selected fields on passed instance of a model."""
+    for field in field_allowlist:
+        yield (instance_, field, getattr(instance_, field.name))

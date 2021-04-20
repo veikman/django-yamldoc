@@ -24,9 +24,10 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 import logging
 import os
 import re
+from typing import Optional
 
 import django.conf
-import markdown
+from django.db.models import Model
 from ovid.inspecting import SignatureShorthand
 
 from . import misc
@@ -40,7 +41,7 @@ from . import misc
 # Multiline support here should be considered unstable. It may be expensive
 # and works poorly with functions that only generate e.g. <span>, without
 # taking paragraphs into account and duplicating the span across each.
-Inline = SignatureShorthand.variant_class(new_registry=False, flags=re.DOTALL)
+Inline = SignatureShorthand.variant_class(flags=re.DOTALL)
 
 
 #########################
@@ -48,10 +49,10 @@ Inline = SignatureShorthand.variant_class(new_registry=False, flags=re.DOTALL)
 #########################
 
 # Generic internal markup for static documents.
+# Call Inline.register on these as needed.
 
 
-@Inline.register
-def br(subject=None):
+def br(subject: Optional[Model] = None):
     """Return a line break.
 
     This is a workaround for the way that pyaml.dump interacts with
@@ -66,8 +67,8 @@ def br(subject=None):
     return '<br />'
 
 
-@Inline.register
-def media(path_fragment, subject=None, label=None, transclude=None):
+def media(path_fragment, subject: Optional[Model] = None,
+          label: Optional[str] = None, transclude: Optional[bool] = None):
     """Link to media."""
     if not label:
         label = path_fragment
@@ -91,8 +92,8 @@ def media(path_fragment, subject=None, label=None, transclude=None):
     return repl
 
 
-@Inline.register
-def static(path_fragment, subject=None, label=None):
+def static(path_fragment: str, subject: Optional[Model] = None,
+           label: Optional[str] = None):
     """Link to a static file."""
     if not label:
         label = path_fragment
@@ -105,60 +106,7 @@ def static(path_fragment, subject=None, label=None):
     return repl
 
 
-@Inline.register
-def table_of_contents(subject=None, heading='Contents'):
-    """Produce Markdown for a TOC with a heading that won't appear in it."""
+def table_of_contents(subject: Optional[Model] = None, heading='Contents'):
+    """Produce Markdown for a TOC with a heading that won’t appear in it."""
     return '<h2 id="{s}">{h}</h2>\n[TOC]'.format(s=misc.slugify(heading),
                                                  h=heading)
-
-
-#######################
-# INTERFACE FUNCTIONS #
-#######################
-
-
-def get_fields(model, classes):
-    """Identify fields on passed model that may contain cookable markup.
-
-    Interesting fields are found primarily through a "fields_with_markup"
-    attribute, secondarily by class. The primary method is a workaround for
-    the fact that Django does not support reclassing (replacing) fields
-    inherited from third-party parent model classes with yamldoc's MarkupField.
-
-    Return a tuple of field instances.
-
-    """
-    try:
-        fields = model.fields_with_markup
-    except AttributeError:
-        fields = model._meta.get_fields()
-        fields = tuple(filter(lambda f: isinstance(f, classes), fields))
-
-    if not fields:
-        s = 'Unable to resolve markup on {}: No suitable fields.'
-        logging.debug(s.format(model))
-
-    return fields
-
-
-def markdown_on_string(raw):
-    """Convert markdown to HTML with standardized extensions.
-
-    This requires the raw input to be unwrapped already.
-
-    """
-    extensions = ['markdown.extensions.footnotes',
-                  'markdown.extensions.toc']
-    return markdown.markdown(raw, extensions=extensions)
-
-
-def all_on_string(string, **kwargs):
-    """Resolve all markup in passed string.
-
-    The order of operations here is intended for inline internal
-    markup to be able to produce new Markdown.
-
-    """
-    string = Inline.collective_sub(string, **kwargs)
-    string = markdown_on_string(string)
-    return string

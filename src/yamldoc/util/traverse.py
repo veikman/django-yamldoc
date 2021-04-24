@@ -20,11 +20,9 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 """
 
 import logging
-from typing import (Callable, FrozenSet, Generator, Optional, Set, Tuple, Type,
-                    Union)
+from typing import Callable, FrozenSet, Generator, Optional, Tuple, Type, Union
 
 import django.apps
-from django.conf import settings
 from django.db.models import Field, Model
 
 ########################
@@ -32,7 +30,7 @@ from django.db.models import Field, Model
 ########################
 
 
-Denylist = Set[Union[Type[Model], str]]
+Denylist = FrozenSet[Union[Type[Model], str]]
 Node = Tuple[Model, str, Optional[str]]
 Traversal = Generator[Node, None, None]
 
@@ -61,18 +59,8 @@ def qualified_class_name(cls: Type) -> str:
 ##############
 
 
-def site(model_denylist: Optional[Denylist] = None, **kwargs) -> Traversal:
-    """Traverse fields in the database of the current site.
-
-    Default to denylisting and ordering according to site settings.
-
-    """
-    if model_denylist is None:
-        try:
-            model_denylist: Denylist = settings.MARKUP_MODEL_DENYLIST
-        except AttributeError:
-            model_denylist: Denylist = {}
-
+def site(model_denylist: Denylist = frozenset(), **kwargs) -> Traversal:
+    """Traverse fields in the database of the current site."""
     for app_ in django.apps.apps.all_models.values():
         yield from app(app_, model_denylist, **kwargs)
 

@@ -28,6 +28,7 @@ from yamldoc.models import Document, MarkupField
 from yamldoc.util.file import transform
 from yamldoc.util.markup import Inline
 from yamldoc.util.misc import slugify
+from yamldoc.util.placeholder import map as placemap
 from yamldoc.util.resolution import (classbased_selector, combo,
                                      get_explicit_fields, map_resolver,
                                      markdown_on_string)
@@ -203,6 +204,23 @@ class _CookingSite(TestCase):
 
 
 class _Other(TestCase):
+
+    def _compose(self, base):
+        # Trivial semi-realistic template production.
+        composite = dict(key=base)
+        return '\n'.join(f'{k}:{v}' for k, v in composite.items())
+
+    def test_placeholder_map_simple(self):
+        entries = [('Blip McCracken', 'at your service')]
+        ref = "key:\n  'Blip McCracken': 'at your service'"
+        self.assertEqual(ref, self._compose(placemap(entries=entries)))
+
+    def test_placeholder_map_complex(self):
+        entries = [('', 'concierge'), ('', 'steward'), ('se lakne', '')]
+        ref = ("key:\n    '': 'concierge'\n    '': 'steward'"
+               "\n    'se lakne': ''")
+        self.assertEqual(ref, self._compose(placemap(entries=entries,
+                                                     level=2)))
 
     def test_slugification(self):
         s = 'This <em>sentence</em> has <span class="vague">some</span> HTML'

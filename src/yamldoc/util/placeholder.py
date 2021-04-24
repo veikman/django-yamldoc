@@ -27,6 +27,8 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 
 """
 
+from typing import List, Tuple
+
 #######################
 # INTERFACE FUNCTIONS #
 #######################
@@ -45,3 +47,11 @@ def lacuna(**kwargs) -> str:
 def empty_list(**kwargs) -> str:
     """Produce a placeholder for a list of short strings."""
     return placeholder("\n{}- ''")
+
+
+def map(entries: List[Tuple[str, str]] = None, **kwargs) -> str:
+    """Produce a placeholder for a map of short strings."""
+    if entries is None:
+        entries = [('', '')]
+    block = '\n{0}'.join(f"'{k}': '{v}'" for k, v in entries)
+    return placeholder(f'\n{{0}}{block}', **kwargs)

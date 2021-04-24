@@ -20,13 +20,12 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 """
 
 from functools import partial
-from typing import Callable, Optional, Tuple, Type
+from typing import Callable, Optional
 
-from django.db.models import Field, Model
+from django.db.models import Model
 from markdown import markdown
 from yamlwrap import unwrap
 
-from yamldoc.models import MarkupField
 from yamldoc.util.markup import Inline
 from yamldoc.util.traverse import Node, site
 
@@ -38,51 +37,14 @@ from yamldoc.util.traverse import Node, site
 Resolver = Callable[[Model, Optional[str]], Optional[str]]
 
 
-###################
-# FIELD SELECTION #
-###################
-
-
-def get_explicit_fields(model: Model) -> Tuple[Type[Field]]:
-    """Identify fields on passed model that may contain cookable markup.
-
-    Interesting fields are found through an explicit opt-in
-    "fields_with_markup" attribute. If no such data is available, raise
-    AttributeError.
-
-    This is a workaround for the fact that Django does not support reclassing
-    (replacing) fields inherited from third-party parent model classes with
-    yamldoc’s MarkupField.
-
-    """
-    return model._meta.fields_with_markup
-
-
-def classbased_selector(allowlist: Tuple[Type[Field]]):
-    """Close over an allowlist as a fallback to get_explicit_fields."""
-    assert allowlist  # isinstance does not accept an empty tuple.
-
-    def field_selector(model: Model) -> Tuple[Type[Field]]:
-        try:
-            return get_explicit_fields(model)
-        except AttributeError:  # No metadata specifically on markup.
-            pass  # Fall back to inspection.
-        return tuple(filter(lambda f: isinstance(f, allowlist),
-                            model._meta.get_fields()))
-    return field_selector
-
-
 #############
 # TRAVERSAL #
 #############
 
 
-def map_resolver(resolver: Resolver,
-                 field_selector=classbased_selector((MarkupField,)),
-                 **kwargs):
+def map_resolver(resolver: Resolver, **kwargs):
     """Map a markup resolution function (a resolver) over a Django site."""
-    return map(partial(visit_field, resolver),
-               site(field_selector=field_selector, **kwargs))
+    return map(partial(visit_field, resolver), site(**kwargs))
 
 
 def visit_field(resolver: Resolver, node: Node):

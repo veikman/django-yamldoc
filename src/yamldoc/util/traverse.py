@@ -25,20 +25,69 @@ from typing import (Callable, FrozenSet, Generator, Hashable, Optional, Tuple,
 import django.apps
 from django.db.models import Field, Model
 
+from yamldoc.models import MarkupField
+
 ########################
 # LOCAL COMPOUND TYPES #
 ########################
 
 
 ACL = FrozenSet[Union[Type[Model], str]]  # Access control list.
+FieldSelector = Callable[[Type[Model]], Tuple[Field]]
 Identifier = Callable[[Type[Model]], Hashable]
 Node = Tuple[Model, str, Optional[str]]
 Screen = Callable[[Type[Model]], bool]
 Traversal = Generator[Node, None, None]
 
 
+############
+# INTERNAL #
+############
+
+
+def _apps_from_site():
+    return django.apps.apps.all_models.values()
+
+
 ###################
-# MINOR FUNCTIONS #
+# FIELD SELECTION #
+###################
+
+
+def get_explicit_fields(model: Model) -> Tuple[Type[Field]]:
+    """Identify fields on passed model that may contain cookable markup.
+
+    Interesting fields are found through an explicit opt-in
+    "fields_with_markup" attribute. If no such data is available, raise
+    AttributeError.
+
+    This is a workaround for the fact that Django does not support reclassing
+    (replacing) fields inherited from third-party parent model classes with
+    yamldoc’s MarkupField.
+
+    """
+    return model._meta.fields_with_markup
+
+
+def classbased_selector(allowlist: Tuple[Type[Field]]):
+    """Close over an allowlist as a fallback to get_explicit_fields."""
+    assert allowlist  # isinstance does not accept an empty tuple.
+
+    def field_selector(model: Model) -> Tuple[Field]:
+        try:
+            return get_explicit_fields(model)
+        except AttributeError:  # No metadata specifically on markup.
+            pass  # Fall back to inspection.
+        return tuple(filter(lambda f: isinstance(f, allowlist),
+                            model._meta.get_fields()))
+    return field_selector
+
+
+markup_field_selector: FieldSelector = classbased_selector((MarkupField,))
+
+
+###################
+# MODEL SELECTION #
 ###################
 
 
@@ -56,13 +105,9 @@ def qualified_class_name(cls: Type[Model]) -> str:
     return cls.__module__ + "." + cls.__name__
 
 
-def inclusion_fn_from_acl(allow: ACL = frozenset(), deny: ACL = frozenset(),
-                          identifier: Identifier = lambda x: x) -> Screen:
-    """Define a Screen.
-
-    This is a convenience based on mutually exclusive sets.
-
-    """
+def screen_from_acl(allow: ACL = frozenset(), deny: ACL = frozenset(),
+                    identifier: Identifier = lambda x: x) -> Screen:
+    """Define a Screen from mutually exclusive sets of models."""
     assert not (allow and deny)
 
     if deny:
@@ -75,6 +120,21 @@ def inclusion_fn_from_acl(allow: ACL = frozenset(), deny: ACL = frozenset(),
     return lambda model: True
 
 
+def screen_from_field_selector(field_selector: FieldSelector =
+                               markup_field_selector) -> Screen:
+    """Define a Screen from a preliminary traversal.
+
+    By default, the Screen will select those models that have any MarkupField
+    on them, which is usually what you want.
+
+    """
+    def top_levels():
+        for app_ in _apps_from_site():
+            yield from filter(field_selector, app_.values())
+
+    return screen_from_acl(allow=frozenset(top_levels()))
+
+
 ##############
 # GENERATORS #
 ##############
@@ -82,12 +142,12 @@ def inclusion_fn_from_acl(allow: ACL = frozenset(), deny: ACL = frozenset(),
 
 def site(**kwargs) -> Traversal:
     """Traverse fields in the database of the current site."""
-    for app_ in django.apps.apps.all_models.values():
+    for app_ in _apps_from_site():
         yield from app(app_, **kwargs)
 
 
-def app(app_, screen: Screen = lambda _: True,
-        field_selector=lambda x: ()) -> Traversal:
+def app(app_, screen: Screen = screen_from_field_selector(),
+        field_selector=markup_field_selector) -> Traversal:
     """Traverse fields in the database of one app.
 
     The app here is expected to be packaged as if by site(). There is no

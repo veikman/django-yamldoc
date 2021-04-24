@@ -30,9 +30,8 @@ from yamldoc.util.markup import Inline
 from yamldoc.util.misc import slugify
 from yamldoc.util.placeholder import lacuna
 from yamldoc.util.placeholder import map as placemap
-from yamldoc.util.resolution import (classbased_selector, combo,
-                                     get_explicit_fields, map_resolver,
-                                     markdown_on_string)
+from yamldoc.util.resolution import combo, map_resolver, markdown_on_string
+from yamldoc.util.traverse import classbased_selector, get_explicit_fields
 
 
 class _CookingMarkdown(TestCase):

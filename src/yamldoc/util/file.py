@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Functions for text files of serialized data.
 
-This module is concerned with the maintenance of text for use on Django sites:
+This module is concerned with the maintenance of text for use on Django sites.
 In particular, with the maintenance of text files formatted with YAML and open
 to programmatic manipulation (grep etc.).
 
@@ -33,8 +33,8 @@ import os
 from collections import OrderedDict
 from typing import Any, Dict
 
-import yamlwrap
 from django.db.models import Model
+from yamlwrap import transform as transform_yaml
 
 #######################
 # INTERFACE FUNCTIONS #
@@ -62,7 +62,7 @@ def find_files(root_folder: str, identifier=lambda _: True, single_file=None):
                 yield os.path.join(dirpath, f)
 
 
-def transform(model: Model, raw: Any, **kwargs):
+def transform(model: Model, raw: str, **kwargs):
     """Close over a model to mould YAML after that model."""
     assert model
 
@@ -92,4 +92,4 @@ def transform(model: Model, raw: Any, **kwargs):
 
         return ordered
 
-    return yamlwrap.transform(raw, map_fn=order_assetmap, **kwargs)
+    return transform_yaml(raw, map_fn=order_assetmap, **kwargs)

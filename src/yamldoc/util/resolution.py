@@ -24,7 +24,7 @@ from typing import Callable, Optional, Tuple, Type
 
 from django.db.models import Field, Model
 from markdown import markdown
-from yamlwrap import unwrap_paragraphs
+from yamlwrap import unwrap
 
 from yamldoc.models import MarkupField
 from yamldoc.util.markup import Inline
@@ -132,5 +132,4 @@ def combo(instance: Model, raw: str) -> str:
     yamldoc.util.markup’s examples.
 
     """
-    return markdown_on_string(inline_on_string(unwrap_paragraphs(raw),
-                                               subject=instance))
+    return markdown_on_string(inline_on_string(unwrap(raw), subject=instance))

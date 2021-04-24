@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 """Standardized base classes for management commands.
 
+Not being placed in a “commands” folder, these do not hook into Django’s site
+CLI.
+
 Author: Viktor Eikman <viktor.eikman@gmail.com>
 
 -------

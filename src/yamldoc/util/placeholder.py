@@ -41,12 +41,12 @@ def placeholder(template: str, indentation: str = '  ', level: int = 1):
 
 def lacuna(**kwargs) -> str:
     """Produce a placeholder for a string."""
-    return placeholder('|-\n{}')
+    return placeholder('|-\n{}', **kwargs)
 
 
 def empty_list(**kwargs) -> str:
     """Produce a placeholder for a list of short strings."""
-    return placeholder("\n{}- ''")
+    return placeholder("\n{}- ''", **kwargs)
 
 
 def map(entries: List[Tuple[str, str]] = None, **kwargs) -> str:

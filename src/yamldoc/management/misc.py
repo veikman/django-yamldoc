@@ -30,8 +30,9 @@ import string
 import subprocess
 
 import django.core.management.base
+from yamlwrap import dump, load
 
-import yamldoc.util.file as uf
+from yamldoc.util.file import find_files, transform
 
 
 class LoggingLevelCommand(django.core.management.base.BaseCommand):
@@ -82,9 +83,9 @@ class _RawTextCommand(LoggingLevelCommand):
         folder = folder or self._default_folder
         file = file or self._default_file
         assert folder or file
-        files = tuple(uf.find_files(folder, single_file=file,
-                                    identifier=self._file_identifier,
-                                    **kwargs))
+        files = tuple(find_files(folder, single_file=file,
+                                 identifier=self._file_identifier,
+                                 **kwargs))
         if not files:
             logging.error('No eligible files.')
         return files
@@ -183,7 +184,7 @@ class RawTextEditingCommand(_RawTextCommand):
             else:
                 line = 1
 
-            subprocess.call(['editor', filepath, '+{}'.format(line)])
+            subprocess.call(['editor', filepath, f'+{line}'])
         else:
             if not wrap or unwrap or filepath:
                 logging.info('Transforming all without standardization.')
@@ -222,7 +223,7 @@ class RawTextEditingCommand(_RawTextCommand):
             old_yaml = None
 
         new_yaml = self._data_from_subject(subject, old_yaml=old_yaml)
-        self._write_spec(filepath, uf.dump(new_yaml))
+        self._write_spec(filepath, dump(new_yaml))
 
     def _data_from_subject(self, subject, old_yaml=None):
         """Update a specification (description) from its actual subject.
@@ -243,9 +244,9 @@ class RawTextEditingCommand(_RawTextCommand):
             with open(filepath, mode='r', encoding='utf-8') as f:
                 old_yaml = f.read()
 
-            new_yaml = uf.transform(old_yaml, model=self._model,
-                                    arbitrary=self._data_manipulation,
-                                    **kwargs)
+            new_yaml = transform(self._model, old_yaml,
+                                 postdescent_fn=self._data_manipulation,
+                                 **kwargs)
             self._write_spec(filepath, new_yaml)
 
     def _write_spec(self, filepath, new_yaml, mode='w'):
@@ -260,8 +261,8 @@ class RawTextEditingCommand(_RawTextCommand):
         folder_override, _, filename = os.path.split(fragment)
         if self._file_prefix:
             filename = '_'.join((self._file_prefix, filename))
-        filename = '{}.yaml'.format(filename)
-        blacklist = r'[^{}]'.format(self._filename_character_whitelist)
+        filename = f'{filename}.yaml'
+        blacklist = f'[^{self._filename_character_whitelist}]'
         filename = filename.format(re.sub(blacklist, '', filename))
         folder = folder_override or folder or self._default_folder
         return os.path.join(folder, filename)
@@ -295,7 +296,7 @@ class RawTextRefinementCommand(_RawTextCommand):
     def _parse_file(self, filepath):
         logging.debug('Parsing {}.'.format(filepath))
         with open(filepath, mode='r', encoding='utf-8') as f:
-            return uf.load(f.read())
+            return load(f.read())
 
 
 class DocumentRefinementCommand(RawTextRefinementCommand):

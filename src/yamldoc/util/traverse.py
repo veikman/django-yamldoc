@@ -19,8 +19,8 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 
 """
 
-import logging
-from typing import Callable, FrozenSet, Generator, Optional, Tuple, Type, Union
+from typing import (Callable, FrozenSet, Generator, Hashable, Optional, Tuple,
+                    Type, Union)
 
 import django.apps
 from django.db.models import Field, Model
@@ -30,8 +30,10 @@ from django.db.models import Field, Model
 ########################
 
 
-Denylist = FrozenSet[Union[Type[Model], str]]
+ACL = FrozenSet[Union[Type[Model], str]]  # Access control list.
+Identifier = Callable[[Type[Model]], Hashable]
 Node = Tuple[Model, str, Optional[str]]
+Screen = Callable[[Type[Model]], bool]
 Traversal = Generator[Node, None, None]
 
 
@@ -40,18 +42,37 @@ Traversal = Generator[Node, None, None]
 ###################
 
 
-def qualified_class_name(cls: Type) -> str:
+def qualified_class_name(cls: Type[Model]) -> str:
     """Return a string uniquely identifying a class (not cls.__qualname__).
 
     Produce the same name that __str__ on a type object does, without the
     "<class '...'>" wrapper.
 
-    This function is meant as part of a workaround for the difficulty of
-    importing all the classes into a Django settings module that should
-    be banned from treatment for markup.
+    This function is an example of the Identifier interface. It is meant as a
+    convenience for cases where direct references to models are not available
+    for the definition of an ACL, for whatever reason.
 
     """
     return cls.__module__ + "." + cls.__name__
+
+
+def inclusion_fn_from_acl(allow: ACL = frozenset(), deny: ACL = frozenset(),
+                          identifier: Identifier = lambda x: x) -> Screen:
+    """Define a Screen.
+
+    This is a convenience based on mutually exclusive sets.
+
+    """
+    assert not (allow and deny)
+
+    if deny:
+        return lambda model: identifier(model) not in deny
+
+    if allow:
+        return lambda model: identifier(model) in allow
+
+    # Default to include all.
+    return lambda model: True
 
 
 ##############
@@ -59,13 +80,13 @@ def qualified_class_name(cls: Type) -> str:
 ##############
 
 
-def site(model_denylist: Denylist = frozenset(), **kwargs) -> Traversal:
+def site(**kwargs) -> Traversal:
     """Traverse fields in the database of the current site."""
     for app_ in django.apps.apps.all_models.values():
-        yield from app(app_, model_denylist, **kwargs)
+        yield from app(app_, **kwargs)
 
 
-def app(app_, model_denylist: Denylist, namefinder=qualified_class_name,
+def app(app_, screen: Screen = lambda _: True,
         field_selector=lambda x: ()) -> Traversal:
     """Traverse fields in the database of one app.
 
@@ -75,13 +96,7 @@ def app(app_, model_denylist: Denylist, namefinder=qualified_class_name,
     The default field_selector is effectively a no-op.
 
     """
-    for model_ in app_.values():
-        # Not skipping superclasses would create trouble with Django's
-        # handling of inheritance (through a OneToOne on the child class).
-        if model_ in model_denylist or namefinder(model) in model_denylist:
-            logging.debug(f'Not traversing {model}: Denylisted.')
-            continue
-
+    for model_ in filter(screen, app_.values()):
         yield from model(model_, field_selector)
 
 

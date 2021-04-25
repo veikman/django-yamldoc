@@ -11,4 +11,4 @@ wheel:
 
 clean:
 	-rm *.whl *.tar.gz
-	rm -rf build dist *.egg-info
+	rm -rf build dist src/*.egg-info

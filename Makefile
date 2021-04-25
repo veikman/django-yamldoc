@@ -12,3 +12,4 @@ wheel:
 clean:
 	-rm *.whl *.tar.gz
 	rm -rf build dist src/*.egg-info
+	find . | grep -E "(__pycache__|\.pyc|\.pyo$$)" | xargs rm -rf

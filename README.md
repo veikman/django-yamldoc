@@ -16,6 +16,9 @@ only by the theme of refining YAML to HTML via quearyable SQL.
 
 `yamldoc` was originally called `vedm` for “Viktor Eikman’s Django miscellania”.
 
+`yamlwrap`, available [here](https://github.com/veikman/yamlwrap), was once a
+central component of `yamldoc`.
+
 Per Django recommendation, `yamldoc` ships with its migrations. Because the
 application is designed for static sites where the entire database is routinely
 rebuilt and therefore disposable, these migrations have been overwritten a few

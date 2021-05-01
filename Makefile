@@ -5,12 +5,14 @@
 test:
 	cd src ; python3 runtests.py
 
-wheel:
+dist: src
+	rm -rf dist
 	python3 -m build
-	mv dist/*.whl .
 
-pypi:
-	python3 -m build
+wheel: dist
+	cp dist/*.whl .
+
+pypi: dist
 	twine upload dist/*
 
 clean:

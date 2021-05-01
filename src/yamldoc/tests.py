@@ -23,6 +23,7 @@ from dataclasses import dataclass
 
 import django.template.defaultfilters
 from django.test import TestCase
+from django.db.models import Model, TextField, PositiveIntegerField, AutoField
 
 from yamldoc.models import Document, MarkupField
 from yamldoc.util.file import transform
@@ -33,6 +34,9 @@ from yamldoc.util.placeholder import map as placemap
 from yamldoc.util.resolution import combo, map_resolver, markdown_on_string
 from yamldoc.util.traverse import classbased_selector, get_explicit_fields
 
+
+class ConcreteDocument(Document):
+    id = AutoField(primary_key=True)
 
 class _CookingMarkdown(TestCase):
 
@@ -154,7 +158,7 @@ class _CookingStructure(TestCase):
 class _ExplicitFieldSelection(TestCase):
     def test_absence_of_metadata(self):
         with self.assertRaises(AttributeError):
-            get_explicit_fields(Document)
+            get_explicit_fields(ConcreteDocument)
 
 
 class _ClassBasedFieldSelection(TestCase):
@@ -164,12 +168,12 @@ class _ClassBasedFieldSelection(TestCase):
 
     def test_mismatch(self):
         f = classbased_selector((int,))
-        self.assertEqual(f(Document), ())
+        self.assertEqual(f(ConcreteDocument), ())
 
     def test_fair_weather(self):
         f = classbased_selector((MarkupField,))
-        self.assertEqual(f(Document),
-                         tuple(f for f in Document._meta.fields
+        self.assertEqual(f(ConcreteDocument),
+                         tuple(f for f in ConcreteDocument._meta.fields
                                if f.name in {'summary', 'ingress', 'body'}))
 
 
@@ -180,20 +184,17 @@ class _CookingSite(TestCase):
                     body='**Cove** is a city\nin Union County.\n',
                     date_created='2016-08-03',
                     date_updated='2016-08-04')
-        doc = Document.create(**raws)
+        doc = ConcreteDocument.create(**raws)
 
         ref = '**Cove** is a city\nin Union County.\n'
         self.assertEqual(ref, doc.body,
                          msg='Text mutated in document creation.')
 
-        # Depending on the Django project wherein yamldoc is tested,
-        # traverse.app may fail to include Document.
-        # TODO: Overwrite settings for testing.
         list(map_resolver(combo))
 
         # At this point, as of Django 3.2, doc.refresh_from_db() is inadequate
         # to retrieve the value set by map_resolver(). Query instead.
-        doc = Document.objects.get(id=1)
+        doc = ConcreteDocument.objects.get(id=1)
 
         ref = 'Cove, Oregon'
         self.assertEqual(ref, doc.title)

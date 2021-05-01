@@ -151,4 +151,5 @@ class Document(models.Model, UploadableMixin):
     class Meta():
         """Model metadata."""
 
+        abstract = True
         ordering = ['date_created', 'title']

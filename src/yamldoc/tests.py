@@ -224,10 +224,14 @@ class _ExplicitFieldSelection(TestCase):
 
             epigraph = MarkupField()
 
-            fields_with_markup = (Document.body.field, epigraph)
+            # Check various ways to refer to fields.
+            fields_with_markup = (Document.body.field,
+                                  epigraph,
+                                  Document._meta.get_field('summary'))
 
         self.assertEqual((LargeExplicitDocument.body.field,
-                          LargeExplicitDocument.epigraph.field),
+                          LargeExplicitDocument.epigraph.field,
+                          LargeExplicitDocument.summary.field),
                          LargeExplicitDocument.fields_with_markup)
 
 

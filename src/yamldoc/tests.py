@@ -40,6 +40,8 @@ class ConcreteDocument(Document):
 
 
 class _UpstreamCharacterization(TestCase):
+    """Tests of Django’s behaviour, irrespective of yamldoc."""
+
     def test_meta_string(self):
         # Check that Django disallows a novel metadata property.
         with self.assertRaises(TypeError):
@@ -60,6 +62,24 @@ class _UpstreamCharacterization(TestCase):
 
                 class Meta():
                     fields_with_markup = (textfield,)
+
+    def test_composition_equality(self):
+        # Adding a non-metadata non-field member to a model should work.
+        class M(Model):
+            id = AutoField(primary_key=True)
+            field = TextField()
+
+            fields_with_markup = (field,)
+
+        # Django is expected to wrap M.field, so that it is not equivalent to
+        # field.
+        self.assertNotEqual(M.fields_with_markup, (M.field,))
+
+        # Penetrating Django’s DeferredAttribute wrapper should fix that.
+        self.assertEqual([f for f in M.fields_with_markup],
+                         [M.field.field])
+        self.assertEqual([f.name for f in M.fields_with_markup],
+                         [M.field.field.name])
 
 
 class _CookingMarkdown(TestCase):

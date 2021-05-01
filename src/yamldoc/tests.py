@@ -200,9 +200,35 @@ class _CookingStructure(TestCase):
 
 
 class _ExplicitFieldSelection(TestCase):
-    def test_absence_of_metadata(self):
+    def test_absence_of_data_abstract(self):
+        with self.assertRaises(AttributeError):
+            get_explicit_fields(Document)
+
+    def test_absence_of_data_concrete(self):
         with self.assertRaises(AttributeError):
             get_explicit_fields(ConcreteDocument)
+
+    def test_fair_weather(self):
+        class SmallExplicitDocument(Document):
+
+            fields_with_markup = (Document.body.field,)
+
+        # The summary field, which is a MarkupField, should not appear.
+        self.assertEqual((SmallExplicitDocument.body.field,),
+                         SmallExplicitDocument.fields_with_markup)
+        self.assertEqual((SmallExplicitDocument.body.field,),
+                         get_explicit_fields(SmallExplicitDocument))
+
+    def test_novel_class(self):
+        class LargeExplicitDocument(Document):
+
+            epigraph = MarkupField()
+
+            fields_with_markup = (Document.body.field, epigraph)
+
+        self.assertEqual((LargeExplicitDocument.body.field,
+                          LargeExplicitDocument.epigraph.field),
+                         LargeExplicitDocument.fields_with_markup)
 
 
 class _ClassBasedFieldSelection(TestCase):

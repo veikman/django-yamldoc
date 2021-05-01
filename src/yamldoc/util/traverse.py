@@ -61,12 +61,15 @@ def get_explicit_fields(model: Model) -> Tuple[Type[Field]]:
     "fields_with_markup" attribute. If no such data is available, raise
     AttributeError.
 
-    This is a workaround for the fact that Django does not support reclassing
-    (replacing) fields inherited from third-party parent model classes with
-    yamldoc’s MarkupField.
+    Unfortunately, Django model._meta (Meta) is locked down and does not accept
+    this attribute.
+
+    This function is a workaround for the fact that Django does not support
+    reclassing (replacing) fields inherited from third-party parent model
+    classes with yamldoc’s MarkupField.
 
     """
-    return model._meta.fields_with_markup
+    return model.fields_with_markup
 
 
 def classbased_selector(allowlist: Tuple[Type[Field]]):

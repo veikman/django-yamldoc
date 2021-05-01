@@ -3,7 +3,10 @@ This log follows the conventions of
 [keepachangelog.com](http://keepachangelog.com/). It picks up from version 1.0.0.
 
 ## [Unreleased]
-Nothing yet.
+### Fixed
+- As a consequence of Document being acknowledged as an abstract model in
+  v1.0.1, the migration file for `yamldoc` was removed, fixing problems
+  migrating concrete classes.
 
 ## [Version 1.0.1]
 ### Fixed

@@ -38,6 +38,18 @@ from yamldoc.util.traverse import classbased_selector, get_explicit_fields
 class ConcreteDocument(Document):
     id = AutoField(primary_key=True)
 
+
+class _UpstreamCharacterization(TestCase):
+    def test_meta(self):
+        with self.assertRaises(TypeError):
+            class M(Model):
+                id = PositiveIntegerField(primary_key=True)
+                field = TextField()
+
+                class Meta():
+                    fields_with_markup = ('field',)
+
+
 class _CookingMarkdown(TestCase):
 
     def test_two_single_line_paragraphs(self):

@@ -22,8 +22,8 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 from dataclasses import dataclass
 
 import django.template.defaultfilters
+from django.db.models import AutoField, Model, TextField
 from django.test import TestCase
-from django.db.models import Model, TextField, AutoField
 
 from yamldoc.models import Document, MarkupField
 from yamldoc.util.file import transform

@@ -23,7 +23,7 @@ from dataclasses import dataclass
 
 import django.template.defaultfilters
 from django.test import TestCase
-from django.db.models import Model, TextField, PositiveIntegerField, AutoField
+from django.db.models import Model, TextField, AutoField
 
 from yamldoc.models import Document, MarkupField
 from yamldoc.util.file import transform
@@ -40,14 +40,26 @@ class ConcreteDocument(Document):
 
 
 class _UpstreamCharacterization(TestCase):
-    def test_meta(self):
+    def test_meta_string(self):
+        # Check that Django disallows a novel metadata property.
         with self.assertRaises(TypeError):
             class M(Model):
-                id = PositiveIntegerField(primary_key=True)
+                id = AutoField(primary_key=True)
                 field = TextField()
 
                 class Meta():
                     fields_with_markup = ('field',)
+
+    def test_meta_field(self):
+        # Like test_meta_string but with a Field instance.
+        textfield = TextField()
+        with self.assertRaises(TypeError):
+            class M(Model):
+                id = AutoField(primary_key=True)
+                field = textfield
+
+                class Meta():
+                    fields_with_markup = (textfield,)
 
 
 class _CookingMarkdown(TestCase):

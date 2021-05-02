@@ -18,4 +18,4 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 
 """
 
-__version__ = '1.1.0-SNAPSHOT'
+__version__ = '1.1.0'

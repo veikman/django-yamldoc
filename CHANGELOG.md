@@ -3,9 +3,12 @@ This log follows the conventions of
 [keepachangelog.com](http://keepachangelog.com/). It picks up from version 1.0.0.
 
 ## [Unreleased]
+Nothing yet.
+
+## [Version 1.1.0]
 ### Changed
 - Increased the maximum length of Document.title from 100 to 255.
-- Set an explicit length on Document.slug, matching title.
+    - Set a matching explicit length on Document.slug.
 
 ## [Version 1.0.2]
 ### Fixed
@@ -20,6 +23,7 @@ This log follows the conventions of
   from model metadata (where it is not allowed to exist in contemporary
   Django), to direct composition onto the model class.
 
-[Unreleased]: https://github.com/veikman/yamldoc/compare/v1.0.2...HEAD
+[Unreleased]: https://github.com/veikman/yamldoc/compare/v1.1.0...HEAD
+[Version 1.1.0]: https://github.com/veikman/yamldoc/compare/v1.0.2...v1.1.0
 [Version 1.0.2]: https://github.com/veikman/yamldoc/compare/v1.0.1...v1.0.2
 [Version 1.0.1]: https://github.com/veikman/yamldoc/compare/v1.0.0...v1.0.1

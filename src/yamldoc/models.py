@@ -129,8 +129,8 @@ class UploadableListMixin(UploadableMixin):
 class Document(models.Model, UploadableMixin):
     """A general document model."""
 
-    title = models.CharField(max_length=100, unique=True)
-    slug = models.SlugField()
+    title = models.CharField(max_length=255, unique=True)
+    slug = models.SlugField(max_length=255)
 
     subtitle = models.TextField()
 

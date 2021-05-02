@@ -3,7 +3,9 @@ This log follows the conventions of
 [keepachangelog.com](http://keepachangelog.com/). It picks up from version 1.0.0.
 
 ## [Unreleased]
-Nothing yet.
+### Changed
+- Increased the maximum length of Document.title from 100 to 255.
+- Set an explicit length on Document.slug, matching title.
 
 ## [Version 1.0.2]
 ### Fixed

@@ -5,6 +5,10 @@ This log follows the conventions of
 ## [Unreleased]
 Nothing yet.
 
+### Fixed
+- Performance: Delayed computation of file length for determining where to open
+  it.
+
 ## [Version 1.1.0]
 ### Changed
 - Increased the maximum length of Document.title from 100 to 255.

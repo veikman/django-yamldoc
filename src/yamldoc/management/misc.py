@@ -154,13 +154,6 @@ class RawTextEditingCommand(_RawTextCommand):
                 wrap=False, unwrap=False, standardize=False, **kwargs):
         filepath = select_file or self._default_file
 
-        if filepath:
-            if os.path.exists(filepath):
-                with open(filepath, mode='r', encoding='utf-8') as f:
-                    eof = sum(1 for line in f) + 1
-            else:
-                eof = 1
-
         if template:
             if not filepath:
                 logging.error('No filepath for template.')
@@ -179,10 +172,13 @@ class RawTextEditingCommand(_RawTextCommand):
             unwrap = wrap = True
 
         if filepath and not any((wrap, unwrap)):
-            if self._should_open_file_at_end(template):
-                line = eof
-            else:
-                line = 1
+            line = 1
+            if (
+                self._should_open_file_at_end(template)
+                and os.path.exists(filepath)
+            ):
+                with open(filepath, mode='r', encoding='utf-8') as f:
+                    line = sum(1 for line in f) + 1
 
             subprocess.call(['editor', filepath, f'+{line}'])
         else:

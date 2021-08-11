@@ -30,7 +30,7 @@ import string
 import subprocess
 
 import django.core.management.base
-from yamlwrap import dump, load
+from yaml import safe_dump, safe_load
 
 from yamldoc.util.file import find_files, transform
 
@@ -50,6 +50,8 @@ class _RawTextCommand(LoggingLevelCommand):
     _default_file = None
     _file_prefix = None
     _file_ending = '.yaml'
+    _deserializer = safe_load
+    _serializer = safe_dump
 
     def add_arguments(self, parser):
         selection = parser.add_mutually_exclusive_group()
@@ -219,7 +221,7 @@ class RawTextEditingCommand(_RawTextCommand):
             old_yaml = None
 
         new_yaml = self._data_from_subject(subject, old_yaml=old_yaml)
-        self._write_spec(filepath, dump(new_yaml))
+        self._write_spec(filepath, self._serializer(new_yaml))
 
     def _data_from_subject(self, subject, old_yaml=None):
         """Update a specification (description) from its actual subject.
@@ -292,7 +294,7 @@ class RawTextRefinementCommand(_RawTextCommand):
     def _parse_file(self, filepath):
         logging.debug('Parsing {}.'.format(filepath))
         with open(filepath, mode='r', encoding='utf-8') as f:
-            return load(f.read())
+            return self._deserializer(f.read())
 
 
 class DocumentRefinementCommand(RawTextRefinementCommand):

@@ -5,6 +5,17 @@ This log follows the conventions of
 ## [Unreleased]
 Nothing yet.
 
+### Changed
+- Stopped using `yamlwrap.dump` and `.load` to serialize/deserialize YAML by
+  default.
+  Switched to corresponding methods in `yaml`, because wrappers in `yamlwrap`
+  have been obviated by improvements in modern `yaml`. Results should be
+  identical.
+
+### Added
+- Functions to serialize/deserialize YAML are now more easily configurable as
+  class properties on inheritors of `_RawTextCommand`.
+
 ### Fixed
 - Performance: Delayed computation of file length for determining where to open
   it.

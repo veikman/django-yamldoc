@@ -19,16 +19,18 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 
 """
 
+from collections import OrderedDict as OD
 from dataclasses import dataclass
 
 import django.template.defaultfilters
 from django.db.models import AutoField, Model, TextField
 from django.test import TestCase
+import yaml
 
 from yamldoc.models import Document, MarkupField
 from yamldoc.util.file import transform
 from yamldoc.util.markup import Inline
-from yamldoc.util.misc import slugify
+from yamldoc.util.misc import slugify, field_order_fn, unique_alphabetizer
 from yamldoc.util.placeholder import lacuna
 from yamldoc.util.placeholder import map as placemap
 from yamldoc.util.resolution import combo, map_resolver, markdown_on_string
@@ -169,7 +171,64 @@ class _CookingInternalMarkup(TestCase):
         self.assertEqual(Inline.collective_sub(s0), s1)
 
 
-class _CookingStructure(TestCase):
+class _StructuralTransformation(TestCase):
+
+    def _check_roundtrip(self, fof, input_, oracle, contents_affected=False,
+                         change=True):
+        if not contents_affected:
+            # When order is disregarded, input_ matches oracle.
+            self.assertEqual(input_, oracle)
+
+            if change:
+                # When order is regarded, input_ does not match oracle.
+                self.assertNotEqual(OD(input_), OD(oracle))
+
+        # Perform operation.
+        ret = fof(input_)
+
+        # Order is established.
+        self.assertEqual(ret, oracle)
+        self.assertEqual(OD(ret), OD(oracle))
+
+    def test_nokeys(self):
+        self._check_roundtrip(field_order_fn(()),
+                              {'a': 1, 'b': 1}, {'a': 1, 'b': 1},
+                              change=False)
+
+    def test_onekey(self):
+        self._check_roundtrip(field_order_fn(('b',)),
+                              {'a': 1, 'b': 1}, {'b': 1, 'a': 1})
+        self._check_roundtrip(field_order_fn(('a',)),
+                              {'a': 1, 'b': 1}, {'a': 1, 'b': 1},
+                              change=False)
+
+    def test_twokey(self):
+        self._check_roundtrip(field_order_fn(('b', 'c')),
+                              {'a': 1, 'b': 1, 'c': 1},
+                              {'b': 1, 'c': 1, 'a': 1})
+        self._check_roundtrip(field_order_fn(('b', 'c')),
+                              {'a': 1, 'b': 1, 'c': 1, 'd': 1},
+                              {'b': 1, 'c': 1, 'a': 1, 'd': 1})
+
+        # Unreferenced keys go last, with their internal order intact.
+        self._check_roundtrip(field_order_fn(('b', 'c')),
+                              {'c': 1, 'd': 1, 'b': 1, 'a': 1},
+                              {'b': 1, 'c': 1, 'd': 1, 'a': 1})
+
+    def test_composite(self):
+        f0 = field_order_fn(('x',))
+        f1 = unique_alphabetizer('z')
+
+        def f(coll):
+            return f1(f0(coll))
+
+        self._check_roundtrip(f,
+                              {'a': 1, 'z': [2, 1], 'x': [2, 1]},
+                              {'x': [2, 1], 'a': 1, 'z': [1, 2]},
+                              contents_affected=True)
+
+
+class _LegacyStructuralTransformation(TestCase):
 
     class _PseudoModel():
         class _meta():
@@ -180,22 +239,40 @@ class _CookingStructure(TestCase):
                       _PseudoField('c'),
                       _PseudoField('b'))
 
+    def _check_str_roundtrip(self, input_, oracle):
+        # When order is disregarded, input_ matches oracle.
+        self.assertEqual(yaml.safe_load(input_),
+                         yaml.safe_load(oracle))
+
+        # When order is regarded, input_ does not match oracle.
+        self.assertNotEqual(input_, oracle)
+        self.assertNotEqual(OD(yaml.safe_load(input_)),
+                            OD(yaml.safe_load(oracle)))
+
+        # Perform operation.
+        ret = transform(self._PseudoModel, input_)
+
+        # Order is established.
+        self.assertEqual(ret, oracle)
+        self.assertEqual(OD(yaml.safe_load(ret)),
+                         OD(yaml.safe_load(oracle)))
+
     def test_sort_single_object_with_model(self):
-        o = ("b: 2\n"
-             "a: 1\n"
-             "c: 3")
-        ref = ("a: 1\n"
-               "c: 3\n"
-               "b: 2\n")
-        self.assertEqual(ref, transform(self._PseudoModel, o))
+        self._check_str_roundtrip(('b: 2\n'
+                                   'a: 1\n'
+                                   'c: 3'),
+                                  ('a: 1\n'
+                                   'c: 3\n'
+                                   'b: 2\n'))
 
     def test_sort_list(self):
-        o = ("- b: 2\n"
-             "  a: 1\n"
-             "- c: 3\n")
-        ref = ("- a: 1\n"
-               "  b: 2\n"
-               "- c: 3\n")
+        # Have transform() descend through a list.
+        o = ('- b: 2\n'
+             '  a: 1\n'
+             '- c: 3\n')
+        ref = ('- a: 1\n'
+               '  b: 2\n'
+               '- c: 3\n')
         self.assertEqual(ref, transform(self._PseudoModel, o))
 
 
@@ -286,15 +363,15 @@ class _Other(TestCase):
         return '\n'.join(f'{k}: {v}' for k, v in composite.items())
 
     def test_placeholder_lacuna0(self):
-        ref = "key: |-\n"
+        ref = 'key: |-\n'
         self.assertEqual(ref, self._compose(lacuna(level=0)))
 
     def test_placeholder_lacuna1(self):
-        ref = "key: |-\n  "
+        ref = 'key: |-\n  '
         self.assertEqual(ref, self._compose(lacuna()))
 
     def test_placeholder_lacuna2(self):
-        ref = "key: |-\n    "
+        ref = 'key: |-\n    '
         self.assertEqual(ref, self._compose(lacuna(level=2)))
 
     def test_placeholder_map_simple(self):

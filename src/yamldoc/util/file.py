@@ -30,6 +30,7 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 
 import logging
 import os
+import warnings
 from collections import OrderedDict
 from typing import Any, Dict
 
@@ -65,6 +66,15 @@ def find_files(root_folder: str, identifier=lambda _: True, single_file=None):
 def transform(model: Model, raw: str, **kwargs):
     """Close over a model to mould YAML after that model."""
     assert model
+
+    # This function uses the internal _meta property and will therefore be
+    # removed in a future major release.
+    warnings.warn(
+        '“yamldoc.util.file.transform” is deprecated in favour of using '
+        '“yamldoc.util.misc.field_order_fn” on tuple(model._meta.fields) as '
+        'well as “.alphabetize_tags” in the same module.',
+        DeprecationWarning
+    )
 
     def order_assetmap(fragment: Dict[str, Any]) -> OrderedDict:
         """Produce an ordered dictionary for replacement of a regular one.

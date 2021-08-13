@@ -6,10 +6,6 @@ This log follows the conventions of
 Nothing yet.
 
 ### Changed
-- Stopped using `yamlwrap.dump` and `.load` to serialize/deserialize YAML by
-  default.
-  Switched to corresponding methods in `yaml`, because wrappers in `yamlwrap`
-  have been obviated by improvements in modern `yaml`.
 - Marked `yamldoc.utils.file.transform` as deprecated because it uses an
   internal property of the model passed to it.
     - Stopped using it by default in management commands.
@@ -18,8 +14,7 @@ Nothing yet.
 
 ### Added
 - Functions to serialize/deserialize YAML are now more easily configurable as
-  class properties on inheritors of `_RawTextCommand`, in case results should
-  change with the new default functions.
+  class properties on inheritors of `_RawTextCommand`.
 - Partial replacements for `yamldoc.utils.file.transform` in
   `yamldoc.utils.misc`.
 

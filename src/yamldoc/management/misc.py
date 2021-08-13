@@ -22,20 +22,19 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 
 """
 
-import warnings
 import datetime
 import logging
 import os
 import re
 import string
 import subprocess
+import warnings
 
 import django.core.management.base
-from yaml import safe_dump, safe_load
+from yamlwrap import dump, load, transform
 
-from yamlwrap import transform
 from yamldoc.util.file import find_files
-from yamldoc.util.misc import field_order_fn, unique_alphabetizer, Raw
+from yamldoc.util.misc import Raw, field_order_fn, unique_alphabetizer
 
 
 class LoggingLevelCommand(django.core.management.base.BaseCommand):
@@ -115,8 +114,8 @@ class RawTextEditingCommand(_RawTextCommand):
     _can_update = False
     _takes_subject = True
 
-    _deserializer = safe_load
-    _serializer = safe_dump
+    _deserializer = load
+    _serializer = dump
 
     _filename_character_whitelist = string.ascii_letters + string.digits
 

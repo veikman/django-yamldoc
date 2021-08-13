@@ -71,8 +71,8 @@ def transform(model: Model, raw: str, **kwargs):
     # removed in a future major release.
     warnings.warn(
         '“yamldoc.util.file.transform” is deprecated in favour of using '
-        '“yamldoc.util.misc.field_order_fn” on tuple(model._meta.fields) as '
-        'well as “.alphabetize_tags” in the same module.',
+        '“yamldoc.util.misc.field_order_fn” and “.alphabetize_tags” '
+        'as demonstrated in “yamldoc.management.misc”.',
         DeprecationWarning
     )
 

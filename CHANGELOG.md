@@ -12,6 +12,9 @@ Nothing yet.
   have been obviated by improvements in modern `yaml`.
 - Marked `yamldoc.utils.file.transform` as deprecated because it uses an
   internal property of the model passed to it.
+    - Stopped using it by default in management commands.
+      Instead, a similar function is synthesized, again using the interal
+      property, and again deprecated.
 
 ### Added
 - Functions to serialize/deserialize YAML are now more easily configurable as

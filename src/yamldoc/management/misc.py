@@ -22,6 +22,7 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 
 """
 
+import warnings
 import datetime
 import logging
 import os
@@ -32,7 +33,9 @@ import subprocess
 import django.core.management.base
 from yaml import safe_dump, safe_load
 
-from yamldoc.util.file import find_files, transform
+from yamlwrap import transform
+from yamldoc.util.file import find_files
+from yamldoc.util.misc import field_order_fn, unique_alphabetizer, Raw
 
 
 class LoggingLevelCommand(django.core.management.base.BaseCommand):
@@ -50,8 +53,6 @@ class _RawTextCommand(LoggingLevelCommand):
     _default_file = None
     _file_prefix = None
     _file_ending = '.yaml'
-    _deserializer = safe_load
-    _serializer = safe_dump
 
     def add_arguments(self, parser):
         selection = parser.add_mutually_exclusive_group()
@@ -113,6 +114,9 @@ class RawTextEditingCommand(_RawTextCommand):
     _can_describe = False
     _can_update = False
     _takes_subject = True
+
+    _deserializer = safe_load
+    _serializer = safe_dump
 
     _filename_character_whitelist = string.ascii_letters + string.digits
 
@@ -238,11 +242,23 @@ class RawTextEditingCommand(_RawTextCommand):
 
     def _transform(self, folder, filepath, **kwargs):
         """Transform YAML documents for editing or source control."""
+        warnings.warn(
+            "The default implementation of "
+            "“RawTextEditingCommand._transform” is deprecated.",
+            DeprecationWarning
+        )
+        fields = tuple(f.name for f in self._model._meta.fields)
+        field_order = field_order_fn(fields)
+        tag_order = unique_alphabetizer('tags')
+
+        def order_assetmap(raw: Raw):
+            return tag_order(field_order(raw))
+
         for filepath in self._get_files(folder=folder, file=filepath):
             with open(filepath, mode='r', encoding='utf-8') as f:
                 old_yaml = f.read()
 
-            new_yaml = transform(self._model, old_yaml,
+            new_yaml = transform(old_yaml, map_fn=order_assetmap,
                                  postdescent_fn=self._data_manipulation,
                                  **kwargs)
             self._write_spec(filepath, new_yaml)

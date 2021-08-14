@@ -32,7 +32,8 @@ import logging
 import os
 import warnings
 from collections import OrderedDict
-from typing import Any, Dict
+from pathlib import Path
+from typing import Any, Callable, Dict, Generator, Optional
 
 from django.db.models import Model
 from yamlwrap import transform as transform_yaml
@@ -42,15 +43,38 @@ from yamlwrap import transform as transform_yaml
 #######################
 
 
-def find_files(root_folder: str, identifier=lambda _: True, single_file=None):
-    """Generate relative paths of asset files with prefix, under a folder.
+def find_assets(root: Path, pattern: str = "**/*.yaml",
+                selection: Optional[Path] = None,
+                pred: Callable[[Path], bool] = lambda _: True
+                ) -> Generator[Path, None, None]:
+    """Generate paths to asset files, recursively globbing a directory.
 
-    If a "single_file" argument is provided, it is assumed to be a relative
-    path to a single file. This design is intended for ease of use with a CLI
-    that takes both folder and file arguments, but should not be considered
-    a stable API.
+    If a “selection” argument is provided, screen only that path, even if it
+    does not lie under the root directory. This design is intended for ease of
+    use with a CLI that takes both folder and file arguments.
 
     """
+    if selection:
+        if pred(selection):
+            yield selection
+        return
+
+    yield from filter(pred, root.glob(pattern))
+
+
+def find_files(root_folder: str, identifier=lambda _: True, single_file=None
+               ) -> Generator[str, None, None]:
+    """Generate relative paths of asset files with prefix, under a folder.
+
+    Similar to find_assets, but based on os.walk and strings.
+
+    """
+    warnings.warn(
+        "“yamldoc.util.file.find_files” is deprecated in favour of "
+        "“find_assets”.",
+        DeprecationWarning
+    )
+
     if single_file:
         if identifier(single_file):
             yield single_file

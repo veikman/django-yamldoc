@@ -29,11 +29,14 @@ import re
 import string
 import subprocess
 import warnings
+from argparse import ArgumentParser
+from pathlib import Path
+from typing import Any, Dict, Generator, Optional, Tuple
 
 import django.core.management.base
 from yamlwrap import dump, load, transform
 
-from yamldoc.util.file import find_files
+from yamldoc.util.file import find_assets, find_files
 from yamldoc.util.misc import Raw, field_order_fn, unique_alphabetizer
 
 
@@ -48,21 +51,22 @@ class LoggingLevelCommand(django.core.management.base.BaseCommand):
 class _RawTextCommand(LoggingLevelCommand):
     """Abstract base class for YAML processors."""
 
-    _default_folder = None
-    _default_file = None
-    _file_prefix = None
+    _default_folder: Optional[Path] = None
+    _default_file: Optional[Path] = None
+    _file_prefix: Optional[str] = None
     _file_ending = '.yaml'
 
-    def add_arguments(self, parser):
-        selection = parser.add_mutually_exclusive_group()
-        selection.add_argument('-F', '--select-folder',
-                               help='Find document(s) in non-default folder'),
-        selection.add_argument('-f', '--select-file',
-                               help='Act on single document'),
-        self._add_selection_arguments(selection)
+    def add_arguments(self, parser: ArgumentParser):
+        self._add_selection_arguments(parser)
+        return parser
 
-    def _add_selection_arguments(self, group):
-        pass
+    def _add_selection_arguments(self, parser: ArgumentParser):
+        selection = parser.add_mutually_exclusive_group()
+        selection.add_argument('-F', '--select-folder', type=Path,
+                               help='Find document(s) in non-default folder'),
+        selection.add_argument('-f', '--select-file', type=Path,
+                               help='Act on single document'),
+        return selection
 
     def handle(self, *args, **kwargs):
         """Handle command.
@@ -80,20 +84,51 @@ class _RawTextCommand(LoggingLevelCommand):
     def _handle(self, **kwargs):
         raise NotImplementedError()
 
-    def _get_files(self, folder=None, file=None, **kwargs):
+    def _get_assets(self, folder=None, file=None, **kwargs
+                    ) -> Generator[Path, None, None]:
         """Find YAML documents to work on."""
         folder = folder or self._default_folder
         file = file or self._default_file
         assert folder or file
+        return find_assets(folder, selection=file,
+                           pred=self._filepath_is_relevant, **kwargs)
+
+    def _get_files(self, folder=None, file=None, **kwargs) -> Tuple[str, ...]:
+        """Find YAML documents to work on."""
+        warnings.warn("“yamldoc.management.misc._RawTextCommand._get_files” "
+                      "is deprecated in favour of “_get_assets”.",
+                      DeprecationWarning)
+        folder = folder or self._default_folder
+        file = file or self._default_file
+        assert folder or file
         files = tuple(find_files(folder, single_file=file,
-                                 identifier=self._file_identifier,
-                                 **kwargs))
+                                 identifier=self._file_identifier))
         if not files:
             logging.error('No eligible files.')
         return files
 
-    def _file_identifier(self, filename):
+    def _filepath_is_relevant(self, filepath: Path) -> bool:
+        """Return a Boolean for whether or not a found file is relevant.
+
+        This is a predicate function for find_assets().
+
+        """
+        name = filepath.name
+        if self._file_prefix:
+            if not name.startswith(self._file_prefix):
+                return False
+        if self._file_ending:
+            if not name.endswith(self._file_ending):
+                return False
+        return filepath.is_file()
+
+    def _file_identifier(self, filename: str):
         """Return a Boolean for whether or not a found file is relevant."""
+        warnings.warn(
+            "“yamldoc.management.misc._RawTextCommand._file_identifier” "
+            "is deprecated in favour of “_filepath_is_relevant”.",
+            DeprecationWarning
+        )
         basename = os.path.basename(filename)
         if self._file_prefix:
             if not basename.startswith(self._file_prefix):
@@ -119,10 +154,13 @@ class RawTextEditingCommand(_RawTextCommand):
 
     _filename_character_whitelist = string.ascii_letters + string.digits
 
-    def add_arguments(self, parser):
+    def add_arguments(self, parser: ArgumentParser):
         """Add additional CLI arguments for raw text sources."""
-        super().add_arguments(parser)
+        parser = super().add_arguments(parser)
+        self._add_action_arguments(parser)
+        return parser
 
+    def _add_action_arguments(self, parser):
         action = parser.add_mutually_exclusive_group()
         action.add_argument('-t', '--template', action='store_true',
                             help='Add a template for a new data object')
@@ -149,10 +187,7 @@ class RawTextEditingCommand(_RawTextCommand):
                             help='Split long paragraphs for readability'),
         action.add_argument('--unwrap', action='store_true',
                             help='Join long paragraphs into single lines')
-        self._add_action_arguments(action)
-
-    def _add_action_arguments(self, group):
-        pass
+        return action
 
     def _handle(self, select_folder=None, select_file=None,
                 template=None, describe=None, update=None,
@@ -253,14 +288,12 @@ class RawTextEditingCommand(_RawTextCommand):
         def order_assetmap(raw: Raw):
             return tag_order(field_order(raw))
 
-        for filepath in self._get_files(folder=folder, file=filepath):
-            with open(filepath, mode='r', encoding='utf-8') as f:
-                old_yaml = f.read()
-
+        for path in self._get_files(folder=folder, file=filepath):
+            old_yaml = path.read_text()
             new_yaml = transform(old_yaml, map_fn=order_assetmap,
                                  postdescent_fn=self._data_manipulation,
                                  **kwargs)
-            self._write_spec(filepath, new_yaml)
+            self._write_spec(path, new_yaml)
 
     def _write_spec(self, filepath, new_yaml, mode='w'):
         if new_yaml:
@@ -286,11 +319,12 @@ class RawTextRefinementCommand(_RawTextCommand):
 
     help = 'Create database object(s) from YAML file(s)'
 
-    def add_arguments(self, parser):
+    def add_arguments(self, parser: ArgumentParser):
         """Add additional CLI arguments for refinement."""
-        super().add_arguments(parser)
+        parser = super().add_arguments(parser)
         parser.add_argument('--additive', action='store_true',
                             help='Do not clear relevant table(s) first'),
+        return parser
 
     def _handle(self, *args, additive=None, **kwargs):
         if not additive:
@@ -302,11 +336,19 @@ class RawTextRefinementCommand(_RawTextCommand):
         self._model.objects.all().delete()
 
     def _create(self, select_folder=None, select_file=None, **kwargs):
-        files = tuple(self._get_files(folder=select_folder, file=select_file))
+        files = tuple(self._get_assets(folder=select_folder, file=select_file))
         assert files
         self._model.create_en_masse(tuple(map(self._parse_file, files)))
 
-    def _parse_file(self, filepath):
+    def _deserialize(self, filepath: Path):
+        logging.debug(f'Deserializing {filepath}.')
+        return self._deserializer(filepath.read_text())
+
+    def _parse_file(self, filepath: str):
+        warnings.warn(
+            "“yamldoc.management.misc.RawTextRefinementCommand._parse_file” "
+            "is deprecated in favour of “_deserialize”.",
+            DeprecationWarning)
         logging.debug('Parsing {}.'.format(filepath))
         with open(filepath, mode='r', encoding='utf-8') as f:
             return self._deserializer(f.read())
@@ -315,12 +357,25 @@ class RawTextRefinementCommand(_RawTextCommand):
 class DocumentRefinementCommand(RawTextRefinementCommand):
     """A specialist on documents corresponding to single model instances."""
 
-    def _parse_file(self, filepath):
-        data = super()._parse_file(filepath)
+    _key_mtime_date = 'date_updated'
 
-        if 'date_updated' not in data:
-            mtime = os.path.getmtime(filepath)
+    def _deserialize(self, filepath: Path):
+        return self._note_date_updated(super()._deserialize(filepath),
+                                       filepath)
+
+    def _parse_file(self, filepath: str):
+        warnings.warn(
+            "“yamldoc.management.misc.DocumentRefinementCommand._parse_file” "
+            "is deprecated in favour of “_deserialize”.",
+            DeprecationWarning)
+        return self._deserialize(Path(filepath))
+
+    def _note_date_updated(self, data: Dict[str, Any], filepath: Path
+                           ) -> Dict[str, Any]:
+        key = self._key_mtime_date
+        if key not in data:
+            mtime = filepath.stat().st_mtime
             date_updated = datetime.date.fromtimestamp(mtime)
-            data['date_updated'] = date_updated
+            data[key] = date_updated
 
         return data

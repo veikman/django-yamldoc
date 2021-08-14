@@ -9,11 +9,12 @@ Nothing yet.
 - Marked `yamldoc.utils.file.transform` as deprecated because it uses an
   internal property of the model passed to it.
 - Migrated for compatibility with `pathlib`.
-    - Set the default type of `--select-*` CLI arguments to `Path`.
+    - Set the default type of `--select-*`, and `--describe`/`--update` CLI
+      arguments to `Path`.
     - Marked `yamldoc.utils.file.find_files` and several methods of the
-      management command models (`_get_files`, `_file_identifier`,
-      `_parse_file`, `_transform`) as deprecated because they use `str` for
-      file paths.
+      management command models (`_new_filepath`, `_get_files`,
+      `_file_identifier`, `_parse_file`, `_describe`, `_transform`) as
+      deprecated because they use `str` for file paths.
 - Changed the way management commands compose mutually exclusively groups.
   Methods that previously took such groups now take parsers instead, and
   are no longer stubs. In the absence of overrides, overall behaviour has
@@ -22,7 +23,8 @@ Nothing yet.
 ### Added
 - Partial replacements for `yamldoc.utils.file.transform` in
   `yamldoc.utils.misc`.
-- `pathlib`-based replacements for methods mentioned above as deprecated.
+- `pathlib`-based replacements for methods mentioned above as deprecated,
+  except for `_new_filepath` which has no replacement.
 - Functions to serialize/deserialize YAML are now more easily configurable as
   class properties on inheritors of `_RawTextCommand`.
 

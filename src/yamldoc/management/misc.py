@@ -168,7 +168,8 @@ class RawTextEditingCommand(_RawTextCommand):
         if self._can_describe:
             s = 'Create new document about subject'
             if self._takes_subject:
-                action.add_argument('--describe', metavar='SUBJECT', help=s)
+                action.add_argument('--describe', metavar='SUBJECT',
+                                    type=Path, help=s)
             else:
                 action.add_argument('--describe', action='store_true', help=s)
 
@@ -176,7 +177,7 @@ class RawTextEditingCommand(_RawTextCommand):
             s = 'Update from changes in subject'
             if self._takes_subject:
                 action.add_argument('-u', '--update', metavar='SUBJECT',
-                                    help=s)
+                                    type=Path, help=s)
             else:
                 action.add_argument('-u', '--update', action='store_true',
                                     help=s)
@@ -206,7 +207,7 @@ class RawTextEditingCommand(_RawTextCommand):
                 logging.error('No filepath for description.')
                 return
 
-            self._describe(describe or update, bool(update), filepath)
+            self._compose(describe or update, bool(update), filepath)
 
         if standardize:
             unwrap = wrap = True
@@ -220,7 +221,7 @@ class RawTextEditingCommand(_RawTextCommand):
                 with open(filepath, mode='r', encoding='utf-8') as f:
                     line = sum(1 for line in f) + 1
 
-            subprocess.call(['editor', filepath, f'+{line}'])
+            subprocess.call(['editor', str(filepath), f'+{line}'])
         else:
             if not wrap or unwrap or filepath:
                 logging.info('Transforming all without standardization.')
@@ -235,33 +236,42 @@ class RawTextEditingCommand(_RawTextCommand):
         """Filter for whether or not to do manual editing from the bottom."""
         return bool(template)
 
-    def _append_template(self, filepath, **kwargs):
+    def _append_template(self, filepath: Path, **kwargs):
         with open(filepath, mode='a', encoding='utf-8') as f:
             self._write_template(f, **kwargs)
 
     def _write_template(self, open_file, **kwargs):
         pass
 
-    def _describe(self, subject, is_update, filepath):
+    def _compose(self, subject: Optional[Path], is_update: bool,
+                 filepath: Path):
         """Compose a document on a subject."""
+        old_yaml = None
         if is_update:
-            if not os.path.exists(filepath):
+            if not filepath.is_file():
                 logging.error('File for prior description does not exist.')
                 return
 
-            with open(filepath, mode='r', encoding='utf-8') as f:
-                old_yaml = f.read()
+            old_yaml = filepath.read_text()
         else:
-            if os.path.exists(filepath):
+            if not filepath.is_file():
                 logging.error('File for new description already exists.')
                 return
-
-            old_yaml = None
 
         new_yaml = self._data_from_subject(subject, old_yaml=old_yaml)
         self._write_spec(filepath, self._serializer(new_yaml))
 
-    def _data_from_subject(self, subject, old_yaml=None):
+    def _describe(self, subject, is_update, filepath: str):
+        """Compose a document on a subject."""
+        warnings.warn(
+            "“RawTextEditingCommand._describe” is deprecated "
+            "in favour of “._compose”.",
+            DeprecationWarning
+        )
+        return self._compose(subject, is_update, Path(filepath))
+
+    def _data_from_subject(self, subject: Optional[Path], old_yaml=None
+                           ) -> Dict[str, Any]:
         """Update a specification (description) from its actual subject.
 
         Take an optional unparsed YAML text string representing a previous
@@ -304,6 +314,10 @@ class RawTextEditingCommand(_RawTextCommand):
             logging.info(s.format(filepath))
 
     def _new_filepath(self, fragment, folder):
+        warnings.warn(
+            "“RawTextEditingCommand._new_filepath” is deprecated.",
+            DeprecationWarning
+        )
         folder_override, _, filename = os.path.split(fragment)
         if self._file_prefix:
             filename = '_'.join((self._file_prefix, filename))

@@ -15,6 +15,8 @@ Nothing yet.
       management command models (`_new_filepath`, `_get_files`,
       `_file_identifier`, `_parse_file`, `_describe`, `_transform`) as
       deprecated because they use `str` for file paths.
+- Default folders and files for management commands are now noted in their
+  argument parsers, instead of being compared later.
 - Changed the way management commands compose mutually exclusively groups.
   Methods that previously took such groups now take parsers instead, and
   are no longer stubs. In the absence of overrides, overall behaviour has

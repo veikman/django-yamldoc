@@ -63,8 +63,10 @@ class _RawTextCommand(LoggingLevelCommand):
     def _add_selection_arguments(self, parser: ArgumentParser):
         selection = parser.add_mutually_exclusive_group()
         selection.add_argument('-F', '--select-folder', type=Path,
+                               default=self._default_folder,
                                help='Find document(s) in non-default folder'),
         selection.add_argument('-f', '--select-file', type=Path,
+                               default=self._default_file,
                                help='Act on single document'),
         return selection
 
@@ -84,22 +86,19 @@ class _RawTextCommand(LoggingLevelCommand):
     def _handle(self, **kwargs):
         raise NotImplementedError()
 
-    def _get_assets(self, folder=None, file=None, **kwargs
+    def _get_assets(self, select_folder=None, select_file=None, **kwargs
                     ) -> Generator[Path, None, None]:
         """Find YAML documents to work on."""
-        folder = folder or self._default_folder
-        file = file or self._default_file
-        assert folder or file
-        return find_assets(folder, selection=file,
+        assert select_folder or select_file
+        return find_assets(select_folder, selection=select_file,
                            pred=self._filepath_is_relevant, **kwargs)
 
-    def _get_files(self, folder=None, file=None, **kwargs) -> Tuple[str, ...]:
+    def _get_files(self, folder=None, file=None, **kwargs
+                   ) -> Tuple[str, ...]:
         """Find YAML documents to work on."""
         warnings.warn("“yamldoc.management.misc._RawTextCommand._get_files” "
                       "is deprecated in favour of “_get_assets”.",
                       DeprecationWarning)
-        folder = folder or self._default_folder
-        file = file or self._default_file
         assert folder or file
         files = tuple(find_files(folder, single_file=file,
                                  identifier=self._file_identifier))
@@ -193,39 +192,37 @@ class RawTextEditingCommand(_RawTextCommand):
     def _handle(self, select_folder=None, select_file=None,
                 template=None, describe=None, update=None,
                 wrap=False, unwrap=False, standardize=False, **kwargs):
-        filepath = select_file or self._default_file
-
         if template:
-            if not filepath:
+            if not select_file:
                 logging.error('No filepath for template.')
                 return
 
-            self._append_template(filepath)
+            self._append_template(select_file)
 
         if describe or update:
-            if not filepath:
+            if not select_file:
                 logging.error('No filepath for description.')
                 return
 
-            self._compose(describe or update, bool(update), filepath)
+            self._compose(describe or update, bool(update), select_file)
 
         if standardize:
             unwrap = wrap = True
 
-        if filepath and not any((wrap, unwrap)):
+        if select_file and not wrap and not unwrap:
             line = 1
             if (
                 self._should_open_file_at_end(template)
-                and os.path.exists(filepath)
+                and os.path.exists(select_file)
             ):
-                with open(filepath, mode='r', encoding='utf-8') as f:
+                with open(select_file, mode='r', encoding='utf-8') as f:
                     line = sum(1 for line in f) + 1
 
-            subprocess.call(['editor', str(filepath), f'+{line}'])
+            subprocess.call(['editor', str(select_file), f'+{line}'])
         else:
-            if not wrap or unwrap or filepath:
+            if not wrap or unwrap or select_file:
                 logging.info('Transforming all without standardization.')
-            self._transform(select_folder or self._default_folder, filepath,
+            self._transform(select_folder, select_file,
                             unwrap=unwrap, wrap=wrap)
 
     def _should_open_editor(self):

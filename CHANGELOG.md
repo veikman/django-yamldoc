@@ -5,6 +5,7 @@ This log follows the conventions of
 ## [Unreleased]
 Nothing yet.
 
+## [Version 1.2.0]
 ### Changed
 - Marked `yamldoc.utils.file.transform` as deprecated because it uses an
   internal property of the model passed to it.
@@ -56,7 +57,8 @@ Nothing yet.
   from model metadata (where it is not allowed to exist in contemporary
   Django), to direct composition onto the model class.
 
-[Unreleased]: https://github.com/veikman/yamldoc/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/veikman/yamldoc/compare/v1.2.0...HEAD
+[Version 1.2.0]: https://github.com/veikman/yamldoc/compare/v1.1.0...v1.2.0
 [Version 1.1.0]: https://github.com/veikman/yamldoc/compare/v1.0.2...v1.1.0
 [Version 1.0.2]: https://github.com/veikman/yamldoc/compare/v1.0.1...v1.0.2
 [Version 1.0.1]: https://github.com/veikman/yamldoc/compare/v1.0.0...v1.0.1

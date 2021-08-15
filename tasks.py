@@ -10,8 +10,7 @@ from invoke import task
 @task()
 def clean(c):
     """Destroy prior artifacts."""
-    c.run('rm *.whl *.tar.gz dist/*', warn=True)
-    c.run('rmdir build dist src/*.egg-info', warn=True)
+    c.run('rm -rf build dist src/*.egg-info', warn=True)
     c.run(r'find . | grep -E "(__pycache__|\.pyc|\.pyo$$)" | xargs rm -rf')
 
 

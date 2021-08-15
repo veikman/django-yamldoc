@@ -8,12 +8,16 @@ Nothing yet.
 ### Changed
 - Marked `yamldoc.utils.file.transform` as deprecated because it uses an
   internal property of the model passed to it.
+- Marked `yamldoc.management.misc.DocumentRefinementCommand` as deprecated
+  because it’s needlessly inheritance-based. Its only useful contributed
+  functionality has been generalized and moved to its parent class,
+  `RawTextRefinementCommand`, as `_note_date_updated`.
 - Migrated for compatibility with `pathlib`.
     - Set the default type of `--select-*`, and `--describe`/`--update` CLI
       arguments to `Path`.
     - Marked `yamldoc.utils.file.find_files` and several methods of the
       management command models (`_new_filepath`, `_get_files`,
-      `_file_identifier`, `_parse_file`, `_describe`, `_transform`) as
+      `_file_identifier`, `_describe`, `_transform`) as
       deprecated because they use `str` for file paths.
 - Default folders and files for management commands are now noted in their
   argument parsers, instead of being compared later.
@@ -27,8 +31,8 @@ Nothing yet.
   `yamldoc.utils.misc`.
 - `pathlib`-based replacements for methods mentioned above as deprecated,
   except for `_new_filepath` which has no replacement.
-- Functions to serialize/deserialize YAML are now more easily configurable as
-  class properties on inheritors of `_RawTextCommand`.
+- Functions to serialize/deserialize YAML are now more easily configurable
+  through new, small instance methods of `_RawTextCommand`.
 
 ### Fixed
 - Performance: Delayed computation of file length for determining where to open

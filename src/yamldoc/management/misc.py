@@ -86,12 +86,30 @@ class _RawTextCommand(LoggingLevelCommand):
     def _handle(self, **kwargs):
         raise NotImplementedError()
 
-    def _get_assets(self, select_folder=None, select_file=None, **kwargs
+    def _deserialize_text(self, text: str) -> Raw:
+        return load(text)
+
+    def _parse_file(self, filepath: Path) -> Raw:
+        logging.debug(f'Parsing {filepath}.')
+        if not isinstance(filepath, Path):
+            warnings.warn(
+                "Passing anything but a Path to "
+                "“yamldoc.management.misc._RawTextCommand._parse_file” "
+                "is deprecated.",
+                DeprecationWarning
+            )
+            filepath = Path(filepath)
+        return self._deserialize_text(filepath.read_text())
+
+    def _serialize_to_text(self, data: Raw) -> str:
+        return dump(data)
+
+    def _get_assets(self, select_folder=None, select_file=None, **_
                     ) -> Generator[Path, None, None]:
         """Find YAML documents to work on."""
         assert select_folder or select_file
         return find_assets(select_folder, selection=select_file,
-                           pred=self._filepath_is_relevant, **kwargs)
+                           pred=self._filepath_is_relevant)
 
     def _get_files(self, folder=None, file=None, **kwargs
                    ) -> Tuple[str, ...]:
@@ -147,9 +165,6 @@ class RawTextEditingCommand(_RawTextCommand):
     _can_describe = False
     _can_update = False
     _takes_subject = True
-
-    _deserializer = load
-    _serializer = dump
 
     _filename_character_whitelist = string.ascii_letters + string.digits
 
@@ -256,7 +271,7 @@ class RawTextEditingCommand(_RawTextCommand):
                 return
 
         new_yaml = self._data_from_subject(subject, old_yaml=old_yaml)
-        self._write_spec(filepath, self._serializer(new_yaml))
+        self._write_spec(filepath, self._serialize_to_text(new_yaml))
 
     def _describe(self, subject, is_update, filepath: str):
         """Compose a document on a subject."""
@@ -330,6 +345,8 @@ class RawTextRefinementCommand(_RawTextCommand):
 
     help = 'Create database object(s) from YAML file(s)'
 
+    _key_mtime_date = 'date_updated'
+
     def add_arguments(self, parser: ArgumentParser):
         """Add additional CLI arguments for refinement."""
         parser = super().add_arguments(parser)
@@ -346,40 +363,10 @@ class RawTextRefinementCommand(_RawTextCommand):
     def _clear_database(self):
         self._model.objects.all().delete()
 
-    def _create(self, select_folder=None, select_file=None, **kwargs):
-        files = tuple(self._get_assets(folder=select_folder, file=select_file))
+    def _create(self, **kwargs):
+        files = tuple(self._get_assets(**kwargs))
         assert files
         self._model.create_en_masse(tuple(map(self._parse_file, files)))
-
-    def _deserialize(self, filepath: Path):
-        logging.debug(f'Deserializing {filepath}.')
-        return self._deserializer(filepath.read_text())
-
-    def _parse_file(self, filepath: str):
-        warnings.warn(
-            "“yamldoc.management.misc.RawTextRefinementCommand._parse_file” "
-            "is deprecated in favour of “_deserialize”.",
-            DeprecationWarning)
-        logging.debug('Parsing {}.'.format(filepath))
-        with open(filepath, mode='r', encoding='utf-8') as f:
-            return self._deserializer(f.read())
-
-
-class DocumentRefinementCommand(RawTextRefinementCommand):
-    """A specialist on documents corresponding to single model instances."""
-
-    _key_mtime_date = 'date_updated'
-
-    def _deserialize(self, filepath: Path):
-        return self._note_date_updated(super()._deserialize(filepath),
-                                       filepath)
-
-    def _parse_file(self, filepath: str):
-        warnings.warn(
-            "“yamldoc.management.misc.DocumentRefinementCommand._parse_file” "
-            "is deprecated in favour of “_deserialize”.",
-            DeprecationWarning)
-        return self._deserialize(Path(filepath))
 
     def _note_date_updated(self, data: Dict[str, Any], filepath: Path
                            ) -> Dict[str, Any]:
@@ -390,3 +377,23 @@ class DocumentRefinementCommand(RawTextRefinementCommand):
             data[key] = date_updated
 
         return data
+
+
+class DocumentRefinementCommand(RawTextRefinementCommand):
+    """A specialist on documents corresponding to single model instances."""
+
+    # This class is too narrow in its focus. Its use is deprecated.
+    # Prefer less object-orientend problem solving.
+
+    def __init__(self, *args, **kwargs):
+        warnings.warn(
+            "“yamldoc.management.misc.DocumentRefinementCommand” "
+            "is deprecated.",
+            DeprecationWarning
+        )
+        super().__init__(*args, **kwargs)
+
+    def _parse_file(self, filepath: Path):
+        """Ensure there’s a date of last update on parsing file."""
+        return self._note_date_updated(super()._parse_file(filepath),
+                                       filepath)

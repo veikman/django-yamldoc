@@ -312,7 +312,10 @@ class RawTextEditingCommand(_RawTextCommand):
 
         for path in self._get_files(folder=folder, file=filepath):
             old_yaml = path.read_text()
-            new_yaml = transform(old_yaml, map_fn=order_assetmap,
+            new_yaml = transform(old_yaml,
+                                 dumper=self._serialize_to_text,
+                                 loader=self._deserialize_text,
+                                 map_fn=order_assetmap,
                                  postdescent_fn=self._data_manipulation,
                                  **kwargs)
             self._write_spec(path, new_yaml)

@@ -86,8 +86,8 @@ class _RawTextCommand(LoggingLevelCommand):
     def _handle(self, **kwargs):
         raise NotImplementedError()
 
-    def _deserialize_text(self, text: str) -> Raw:
-        return load(text)
+    def _deserialize_text(self, text: str, **kwargs) -> Raw:
+        return load(text, **kwargs)
 
     def _parse_file(self, filepath: Path) -> Raw:
         logging.debug(f'Parsing {filepath}.')
@@ -101,8 +101,8 @@ class _RawTextCommand(LoggingLevelCommand):
             filepath = Path(filepath)
         return self._deserialize_text(filepath.read_text())
 
-    def _serialize_to_text(self, data: Raw) -> str:
-        return dump(data)
+    def _serialize_to_text(self, data: Raw, **kwargs) -> str:
+        return dump(data, **kwargs)
 
     def _get_assets(self, select_folder=None, select_file=None, **_
                     ) -> Generator[Path, None, None]:

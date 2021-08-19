@@ -124,20 +124,24 @@ class _RawTextCommand(LoggingLevelCommand):
             logging.error('No eligible files.')
         return files
 
-    def _filepath_is_relevant(self, filepath: Path) -> bool:
+    def _filepath_is_relevant(self, path: Path) -> bool:
         """Return a Boolean for whether or not a found file is relevant.
 
         This is a predicate function for find_assets().
 
         """
-        name = filepath.name
-        if self._file_prefix:
-            if not name.startswith(self._file_prefix):
-                return False
-        if self._file_ending:
-            if not name.endswith(self._file_ending):
-                return False
-        return filepath.is_file()
+        if not path.is_file():
+            # This is expected only if the user indicates a specific file on an
+            # invalid path. Globbing is not expected to return non-files.
+            logging.warning(f"Not a file: {path}.")
+            return False
+        if self._file_prefix and not path.name.startswith(self._file_prefix):
+            logging.debug(f"Wrong prefix in file name: {path}.")
+            return False
+        if self._file_ending and not path.suffix == self._file_ending:
+            logging.debug(f"Wrong suffix in file name: {path}.")
+            return False
+        return False
 
     def _file_identifier(self, filename: str):
         """Return a Boolean for whether or not a found file is relevant."""

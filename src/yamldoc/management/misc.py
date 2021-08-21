@@ -141,7 +141,7 @@ class _RawTextCommand(LoggingLevelCommand):
         if self._file_ending and not path.suffix == self._file_ending:
             logging.debug(f"Wrong suffix in file name: {path}.")
             return False
-        return False
+        return True
 
     def _file_identifier(self, filename: str):
         """Return a Boolean for whether or not a found file is relevant."""

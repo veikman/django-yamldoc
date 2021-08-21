@@ -3,7 +3,12 @@ This log follows the conventions of
 [keepachangelog.com](http://keepachangelog.com/). It picks up from version 1.0.0.
 
 ## [Unreleased]
-Nothing yet.
+### Added
+- Added the use of (de)serializing methods new in v1.2.0 as keyword
+  arguments new in yamlwrap 2.1.0.
+- Added keyword argument passing to (de)serializing methods new in
+  v1.2.0.
+- Debug logging from the (new) filepath predicate method.
 
 ## [Version 1.2.0]
 ### Changed

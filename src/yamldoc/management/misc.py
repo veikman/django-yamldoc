@@ -36,7 +36,8 @@ from typing import Any, Dict, Generator, Optional, Tuple
 import django.core.management.base
 from yamlwrap import dump, load, transform
 
-from yamldoc.util.file import find_assets, find_files
+from yamldoc.util.file import (existing_dir, existing_file, find_assets,
+                               find_files)
 from yamldoc.util.misc import Raw, field_order_fn, unique_alphabetizer
 
 
@@ -62,12 +63,12 @@ class _RawTextCommand(LoggingLevelCommand):
 
     def _add_selection_arguments(self, parser: ArgumentParser):
         selection = parser.add_mutually_exclusive_group()
-        selection.add_argument('-F', '--select-folder', type=Path,
-                               default=self._default_folder,
-                               help='Find document(s) in non-default folder'),
-        selection.add_argument('-f', '--select-file', type=Path,
-                               default=self._default_file,
-                               help='Act on single document'),
+        selection.add_argument('-F', '--select-folder', metavar='PATH',
+                               type=existing_dir, default=self._default_folder,
+                               help='Find file(s) in non-default folder'),
+        selection.add_argument('-f', '--select-file', metavar='PATH',
+                               type=existing_file, default=self._default_file,
+                               help='Act on single file'),
         return selection
 
     def handle(self, *args, **kwargs):

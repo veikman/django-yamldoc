@@ -31,6 +31,7 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 import logging
 import os
 import warnings
+from argparse import ArgumentTypeError
 from collections import OrderedDict
 from pathlib import Path
 from typing import Any, Callable, Dict, Generator, Optional
@@ -127,3 +128,19 @@ def transform(model: Model, raw: str, **kwargs):
         return ordered
 
     return transform_yaml(raw, map_fn=order_assetmap, **kwargs)
+
+
+def existing_file(candidate: str):
+    """Convert a CLI argument to an absolute file path."""
+    path = Path(candidate).resolve()
+    if not path.is_file():
+        raise ArgumentTypeError(f"Not a file: {path}")
+    return path
+
+
+def existing_dir(candidate: str):
+    """Convert a CLI argument to an absolute folder path."""
+    path = Path(candidate).resolve()
+    if not path.is_dir():
+        raise ArgumentTypeError(f"Not a folder: {path}")
+    return path

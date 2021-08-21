@@ -22,7 +22,6 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 
 """
 
-import datetime
 import logging
 import os
 import re
@@ -36,8 +35,8 @@ from typing import Any, Dict, Generator, Optional, Tuple
 import django.core.management.base
 from yamlwrap import dump, load, transform
 
-from yamldoc.util.file import (existing_dir, existing_file, find_assets,
-                               find_files)
+from yamldoc.util.file import (date_of_last_edit, existing_dir, existing_file,
+                               find_assets, find_files)
 from yamldoc.util.misc import Raw, field_order_fn, unique_alphabetizer
 
 
@@ -380,9 +379,7 @@ class RawTextRefinementCommand(_RawTextCommand):
                            ) -> Dict[str, Any]:
         key = self._key_mtime_date
         if key not in data:
-            mtime = filepath.stat().st_mtime
-            date_updated = datetime.date.fromtimestamp(mtime)
-            data[key] = date_updated
+            data[key] = date_of_last_edit(filepath)
 
         return data
 

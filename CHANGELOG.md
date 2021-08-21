@@ -5,11 +5,12 @@ This log follows the conventions of
 ## [Unreleased]
 ### Added
 - CLI arguments for selecting files and folders now automatically resolve to
-  absolute paths, the prior existence of which is now required.
+  absolute paths, the prior existence of which is now checked.
 - Added the use of (de)serializing methods new in v1.2.0 as keyword
   arguments new in yamlwrap 2.1.0.
 - Added keyword argument passing to (de)serializing methods new in
   v1.2.0.
+- Support for Git as a means of dating the last edit made to a source file.
 - Debug logging from the (new) filepath predicate method.
 
 ## [Version 1.2.0]

@@ -28,12 +28,14 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 # IMPORTS #
 ###########
 
+import datetime
 import logging
 import os
 import warnings
 from argparse import ArgumentTypeError
 from collections import OrderedDict
 from pathlib import Path
+from subprocess import run
 from typing import Any, Callable, Dict, Generator, Optional
 
 from django.db.models import Model
@@ -128,6 +130,25 @@ def transform(model: Model, raw: str, **kwargs):
         return ordered
 
     return transform_yaml(raw, map_fn=order_assetmap, **kwargs)
+
+
+def date_of_last_edit(path: Path) -> datetime.date:
+    """Find the date when passed file was last edited."""
+    return datetime.date.fromtimestamp(timestamp_of_last_edit(path))
+
+
+def timestamp_of_last_edit(path: Path) -> float:
+    """Find the second since Epoch when passed file was last edited.
+
+    Prefer a VCS (Git only) timestamp and fall back to the file system.
+
+    """
+    cmd = ['git', 'log', '--max-count=1', '--format=%ct', '--', str(path)]
+    git = run(cmd, capture_output=True, cwd=path.parent)
+    if git.stdout and not git.returncode:
+        # The output should be the timestamp of committing the last change.
+        return float(git.stdout.strip())
+    return path.stat().st_mtime
 
 
 def existing_file(candidate: str):

@@ -3,6 +3,9 @@ This log follows the conventions of
 [keepachangelog.com](http://keepachangelog.com/). It picks up from version 1.0.0.
 
 ## [Unreleased]
+Nothing yet.
+
+## [Version 1.3.0]
 ### Added
 - CLI arguments for selecting files and folders now automatically resolve to
   absolute paths, the prior existence of which is now checked.
@@ -11,7 +14,7 @@ This log follows the conventions of
 - Added keyword argument passing to (de)serializing methods new in
   v1.2.0.
 - Support for Git as a means of dating the last edit made to a source file.
-- Debug logging from the (new) filepath predicate method.
+- Debug logging from the filepath predicate method new in v1.2.0.
 
 ## [Version 1.2.0]
 ### Changed
@@ -65,7 +68,8 @@ This log follows the conventions of
   from model metadata (where it is not allowed to exist in contemporary
   Django), to direct composition onto the model class.
 
-[Unreleased]: https://github.com/veikman/yamldoc/compare/v1.2.0...HEAD
+[Unreleased]: https://github.com/veikman/yamldoc/compare/v1.3.0...HEAD
+[Version 1.3.0]: https://github.com/veikman/yamldoc/compare/v1.2.0...v1.3.0
 [Version 1.2.0]: https://github.com/veikman/yamldoc/compare/v1.1.0...v1.2.0
 [Version 1.1.0]: https://github.com/veikman/yamldoc/compare/v1.0.2...v1.1.0
 [Version 1.0.2]: https://github.com/veikman/yamldoc/compare/v1.0.1...v1.0.2

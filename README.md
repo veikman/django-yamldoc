@@ -1,5 +1,7 @@
 # `django-yamldoc`: Quoins for static sites
 
+[![PyPI version](https://badge.fury.io/py/django-yamldoc.svg)](https://badge.fury.io/py/django-yamldoc)
+
 This is a Django application for maintaining documents in YAML format and
 refining them to a traditional ORM’d database to serve them to users. It’s for
 people who prefer VCS over SQL.

@@ -64,10 +64,10 @@ class _RawTextCommand(LoggingLevelCommand):
         selection = parser.add_mutually_exclusive_group()
         selection.add_argument('-F', '--select-folder', metavar='PATH',
                                type=existing_dir, default=self._default_folder,
-                               help='Find file(s) in non-default folder'),
+                               help='Find file(s) in non-default folder')
         selection.add_argument('-f', '--select-file', metavar='PATH',
                                type=existing_file, default=self._default_file,
-                               help='Act on single file'),
+                               help='Act on single file')
         return selection
 
     def handle(self, *args, **kwargs):
@@ -201,9 +201,9 @@ class RawTextEditingCommand(_RawTextCommand):
                                     help=s)
 
         action.add_argument('-s', '--standardize', action='store_true',
-                            help='Batch preparation for revision control'),
+                            help='Batch preparation for revision control')
         action.add_argument('--wrap', action='store_true',
-                            help='Split long paragraphs for readability'),
+                            help='Split long paragraphs for readability')
         action.add_argument('--unwrap', action='store_true',
                             help='Join long paragraphs into single lines')
         return action
@@ -358,7 +358,7 @@ class RawTextRefinementCommand(_RawTextCommand):
         """Add additional CLI arguments for refinement."""
         parser = super().add_arguments(parser)
         parser.add_argument('--additive', action='store_true',
-                            help='Do not clear relevant table(s) first'),
+                            help='Do not clear relevant table(s) first')
         return parser
 
     def _handle(self, *args, additive=None, **kwargs):

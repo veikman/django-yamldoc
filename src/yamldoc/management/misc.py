@@ -229,6 +229,8 @@ class RawTextEditingCommand(_RawTextCommand):
             unwrap = wrap = True
 
         if select_file and not wrap and not unwrap:
+            # TODO: Rebuild to support opening file at start of recent
+            # programmatic addition to it.
             line = 1
             if (
                 self._should_open_file_at_end(template)

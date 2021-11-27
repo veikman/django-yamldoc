@@ -33,16 +33,14 @@ from pathlib import Path
 from typing import Any, Dict, Generator, Optional, Tuple
 
 import django.core.management.base
-from yamlwrap import dump, load, transform
-
 from yamldoc.util.file import (date_of_last_edit, existing_dir, existing_file,
                                find_assets, find_files)
 from yamldoc.util.misc import Raw, field_order_fn, unique_alphabetizer
+from yamlwrap import dump, load, transform
 
 
 class LoggingLevelCommand(django.core.management.base.BaseCommand):
     """A command that uses Django's verbosity for general logging."""
-
     def handle(self, **kwargs):
         """Adapt Django's standard verbosity argument for general use."""
         logging.basicConfig(level=10 * (4 - kwargs['verbosity']))
@@ -62,11 +60,17 @@ class _RawTextCommand(LoggingLevelCommand):
 
     def _add_selection_arguments(self, parser: ArgumentParser):
         selection = parser.add_mutually_exclusive_group()
-        selection.add_argument('-F', '--select-folder', metavar='PATH',
-                               type=existing_dir, default=self._default_folder,
+        selection.add_argument('-F',
+                               '--select-folder',
+                               metavar='PATH',
+                               type=existing_dir,
+                               default=self._default_folder,
                                help='Find file(s) in non-default folder')
-        selection.add_argument('-f', '--select-file', metavar='PATH',
-                               type=existing_file, default=self._default_file,
+        selection.add_argument('-f',
+                               '--select-file',
+                               metavar='PATH',
+                               type=existing_file,
+                               default=self._default_file,
                                help='Act on single file')
         return selection
 
@@ -95,31 +99,33 @@ class _RawTextCommand(LoggingLevelCommand):
             warnings.warn(
                 "Passing anything but a Path to "
                 "“yamldoc.management.misc._RawTextCommand._parse_file” "
-                "is deprecated.",
-                DeprecationWarning
-            )
+                "is deprecated.", DeprecationWarning)
             filepath = Path(filepath)
         return self._deserialize_text(filepath.read_text())
 
     def _serialize_to_text(self, data: Raw, **kwargs) -> str:
         return dump(data, **kwargs)
 
-    def _get_assets(self, select_folder=None, select_file=None, **_
-                    ) -> Generator[Path, None, None]:
+    def _get_assets(self,
+                    select_folder=None,
+                    select_file=None,
+                    **_) -> Generator[Path, None, None]:
         """Find YAML documents to work on."""
         assert select_folder or select_file
-        return find_assets(select_folder, selection=select_file,
+        return find_assets(select_folder,
+                           selection=select_file,
                            pred=self._filepath_is_relevant)
 
-    def _get_files(self, folder=None, file=None, **kwargs
-                   ) -> Tuple[str, ...]:
+    def _get_files(self, folder=None, file=None, **kwargs) -> Tuple[str, ...]:
         """Find YAML documents to work on."""
-        warnings.warn("“yamldoc.management.misc._RawTextCommand._get_files” "
-                      "is deprecated in favour of “_get_assets”.",
-                      DeprecationWarning)
+        warnings.warn(
+            "“yamldoc.management.misc._RawTextCommand._get_files” "
+            "is deprecated in favour of “_get_assets”.", DeprecationWarning)
         assert folder or file
-        files = tuple(find_files(folder, single_file=file,
-                                 identifier=self._file_identifier))
+        files = tuple(
+            find_files(folder,
+                       single_file=file,
+                       identifier=self._file_identifier))
         if not files:
             logging.error('No eligible files.')
         return files
@@ -148,8 +154,7 @@ class _RawTextCommand(LoggingLevelCommand):
         warnings.warn(
             "“yamldoc.management.misc._RawTextCommand._file_identifier” "
             "is deprecated in favour of “_filepath_is_relevant”.",
-            DeprecationWarning
-        )
+            DeprecationWarning)
         basename = os.path.basename(filename)
         if self._file_prefix:
             if not basename.startswith(self._file_prefix):
@@ -180,37 +185,57 @@ class RawTextEditingCommand(_RawTextCommand):
 
     def _add_action_arguments(self, parser):
         action = parser.add_mutually_exclusive_group()
-        action.add_argument('-t', '--template', action='store_true',
+        action.add_argument('-t',
+                            '--template',
+                            action='store_true',
                             help='Add a template for a new data object')
 
         if self._can_describe:
             s = 'Create new document about subject'
             if self._takes_subject:
-                action.add_argument('--describe', metavar='SUBJECT',
-                                    type=Path, help=s)
+                action.add_argument('--describe',
+                                    metavar='SUBJECT',
+                                    type=Path,
+                                    help=s)
             else:
                 action.add_argument('--describe', action='store_true', help=s)
 
         if self._can_update:
             s = 'Update from changes in subject'
             if self._takes_subject:
-                action.add_argument('-u', '--update', metavar='SUBJECT',
-                                    type=Path, help=s)
+                action.add_argument('-u',
+                                    '--update',
+                                    metavar='SUBJECT',
+                                    type=Path,
+                                    help=s)
             else:
-                action.add_argument('-u', '--update', action='store_true',
+                action.add_argument('-u',
+                                    '--update',
+                                    action='store_true',
                                     help=s)
 
-        action.add_argument('-s', '--standardize', action='store_true',
+        action.add_argument('-s',
+                            '--standardize',
+                            action='store_true',
                             help='Batch preparation for revision control')
-        action.add_argument('--wrap', action='store_true',
+        action.add_argument('--wrap',
+                            action='store_true',
                             help='Split long paragraphs for readability')
-        action.add_argument('--unwrap', action='store_true',
+        action.add_argument('--unwrap',
+                            action='store_true',
                             help='Join long paragraphs into single lines')
         return action
 
-    def _handle(self, select_folder=None, select_file=None,
-                template=None, describe=None, update=None,
-                wrap=False, unwrap=False, standardize=False, **kwargs):
+    def _handle(self,
+                select_folder=None,
+                select_file=None,
+                template=None,
+                describe=None,
+                update=None,
+                wrap=False,
+                unwrap=False,
+                standardize=False,
+                **kwargs):
         if template:
             if not select_file:
                 logging.error('No filepath for template.')
@@ -232,10 +257,8 @@ class RawTextEditingCommand(_RawTextCommand):
             # TODO: Rebuild to support opening file at start of recent
             # programmatic addition to it.
             line = 1
-            if (
-                self._should_open_file_at_end(template)
-                and os.path.exists(select_file)
-            ):
+            if (self._should_open_file_at_end(template)
+                    and os.path.exists(select_file)):
                 with open(select_file, mode='r', encoding='utf-8') as f:
                     line = sum(1 for line in f) + 1
 
@@ -243,8 +266,10 @@ class RawTextEditingCommand(_RawTextCommand):
         else:
             if not wrap or unwrap or select_file:
                 logging.info('Transforming all without standardization.')
-            self._transform(select_folder, select_file,
-                            unwrap=unwrap, wrap=wrap)
+            self._transform(select_folder,
+                            select_file,
+                            unwrap=unwrap,
+                            wrap=wrap)
 
     def _should_open_editor(self):
         """Determine whether to open a text editor. A stub."""
@@ -283,13 +308,12 @@ class RawTextEditingCommand(_RawTextCommand):
         """Compose a document on a subject."""
         warnings.warn(
             "“RawTextEditingCommand._describe” is deprecated "
-            "in favour of “._compose”.",
-            DeprecationWarning
-        )
+            "in favour of “._compose”.", DeprecationWarning)
         return self._compose(subject, is_update, Path(filepath))
 
-    def _data_from_subject(self, subject: Optional[Path], old_yaml=None
-                           ) -> Dict[str, Any]:
+    def _data_from_subject(self,
+                           subject: Optional[Path],
+                           old_yaml=None) -> Dict[str, Any]:
         """Update a specification (description) from its actual subject.
 
         Take an optional unparsed YAML text string representing a previous
@@ -307,8 +331,7 @@ class RawTextEditingCommand(_RawTextCommand):
         warnings.warn(
             "The default implementation of "
             "“RawTextEditingCommand._transform” is deprecated.",
-            DeprecationWarning
-        )
+            DeprecationWarning)
         fields = tuple(f.name for f in self._model._meta.fields)
         field_order = field_order_fn(fields)
         tag_order = unique_alphabetizer('tags')
@@ -335,10 +358,8 @@ class RawTextEditingCommand(_RawTextCommand):
             logging.info(s.format(filepath))
 
     def _new_filepath(self, fragment, folder):
-        warnings.warn(
-            "“RawTextEditingCommand._new_filepath” is deprecated.",
-            DeprecationWarning
-        )
+        warnings.warn("“RawTextEditingCommand._new_filepath” is deprecated.",
+                      DeprecationWarning)
         folder_override, _, filename = os.path.split(fragment)
         if self._file_prefix:
             filename = '_'.join((self._file_prefix, filename))
@@ -359,7 +380,8 @@ class RawTextRefinementCommand(_RawTextCommand):
     def add_arguments(self, parser: ArgumentParser):
         """Add additional CLI arguments for refinement."""
         parser = super().add_arguments(parser)
-        parser.add_argument('--additive', action='store_true',
+        parser.add_argument('--additive',
+                            action='store_true',
                             help='Do not clear relevant table(s) first')
         return parser
 
@@ -377,8 +399,8 @@ class RawTextRefinementCommand(_RawTextCommand):
         assert files
         self._model.create_en_masse(tuple(map(self._parse_file, files)))
 
-    def _note_date_updated(self, data: Dict[str, Any], filepath: Path
-                           ) -> Dict[str, Any]:
+    def _note_date_updated(self, data: Dict[str, Any],
+                           filepath: Path) -> Dict[str, Any]:
         key = self._key_mtime_date
         if key not in data:
             data[key] = date_of_last_edit(filepath)
@@ -395,12 +417,9 @@ class DocumentRefinementCommand(RawTextRefinementCommand):
     def __init__(self, *args, **kwargs):
         warnings.warn(
             "“yamldoc.management.misc.DocumentRefinementCommand” "
-            "is deprecated.",
-            DeprecationWarning
-        )
+            "is deprecated.", DeprecationWarning)
         super().__init__(*args, **kwargs)
 
     def _parse_file(self, filepath: Path):
         """Ensure there’s a date of last update on parsing file."""
-        return self._note_date_updated(super()._parse_file(filepath),
-                                       filepath)
+        return self._note_date_updated(super()._parse_file(filepath), filepath)

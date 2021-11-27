@@ -5,6 +5,10 @@ This log follows the conventions of
 ## [Unreleased]
 Nothing yet.
 
+### New
+- `_append_template` now returns a `bool` so that callers can react to it being
+  cancelled.
+
 ## [Version 1.3.0]
 ### Added
 - CLI arguments for selecting files and folders now automatically resolve to

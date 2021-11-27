@@ -241,7 +241,10 @@ class RawTextEditingCommand(_RawTextCommand):
                 logging.error('No filepath for template.')
                 return
 
-            self._append_template(select_file)
+            if not self._append_template(select_file):
+                # Editing aborted or validation failed etc.
+                logging.warning('Template not appended.')
+                return
 
         if describe or update:
             if not select_file:
@@ -279,9 +282,10 @@ class RawTextEditingCommand(_RawTextCommand):
         """Filter for whether or not to do manual editing from the bottom."""
         return bool(template)
 
-    def _append_template(self, filepath: Path, **kwargs):
+    def _append_template(self, filepath: Path, **kwargs) -> bool:
         with open(filepath, mode='a', encoding='utf-8') as f:
             self._write_template(f, **kwargs)
+        return True
 
     def _write_template(self, open_file, **kwargs):
         pass

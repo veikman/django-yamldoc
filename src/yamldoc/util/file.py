@@ -23,7 +23,6 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 
 """
 
-
 ###########
 # IMPORTS #
 ###########
@@ -46,10 +45,19 @@ from yamlwrap import transform as transform_yaml
 #######################
 
 
-def find_assets(root: Path, pattern: str = "**/*.yaml",
-                selection: Optional[Path] = None,
-                pred: Callable[[Path], bool] = lambda _: True
-                ) -> Generator[Path, None, None]:
+def count_lines(path: Path) -> int:
+    """Count the number of lines of text in passed file."""
+    assert path.is_file()
+    with path.open(mode='rb') as f:
+        return 1 + sum(1 for line in f)
+
+
+def find_assets(
+    root: Path,
+    pattern: str = "**/*.yaml",
+    selection: Optional[Path] = None,
+    pred: Callable[[Path],
+                   bool] = lambda _: True) -> Generator[Path, None, None]:
     """Generate paths to asset files, recursively globbing a directory.
 
     If a “selection” argument is provided, screen only that path, even if it
@@ -65,8 +73,9 @@ def find_assets(root: Path, pattern: str = "**/*.yaml",
     yield from filter(pred, root.glob(pattern))
 
 
-def find_files(root_folder: str, identifier=lambda _: True, single_file=None
-               ) -> Generator[str, None, None]:
+def find_files(root_folder: str,
+               identifier=lambda _: True,
+               single_file=None) -> Generator[str, None, None]:
     """Generate relative paths of asset files with prefix, under a folder.
 
     Similar to find_assets, but based on os.walk and strings.
@@ -74,9 +83,7 @@ def find_files(root_folder: str, identifier=lambda _: True, single_file=None
     """
     warnings.warn(
         "“yamldoc.util.file.find_files” is deprecated in favour of "
-        "“find_assets”.",
-        DeprecationWarning
-    )
+        "“find_assets”.", DeprecationWarning)
 
     if single_file:
         if identifier(single_file):
@@ -99,9 +106,7 @@ def transform(model: Model, raw: str, **kwargs):
     warnings.warn(
         '“yamldoc.util.file.transform” is deprecated in favour of using '
         '“yamldoc.util.misc.field_order_fn” and “.alphabetize_tags” '
-        'as demonstrated in “yamldoc.management.misc”.',
-        DeprecationWarning
-    )
+        'as demonstrated in “yamldoc.management.misc”.', DeprecationWarning)
 
     def order_assetmap(fragment: Dict[str, Any]) -> OrderedDict:
         """Produce an ordered dictionary for replacement of a regular one.

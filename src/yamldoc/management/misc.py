@@ -33,8 +33,8 @@ from pathlib import Path
 from typing import Any, Dict, Generator, Optional, Tuple
 
 import django.core.management.base
-from yamldoc.util.file import (date_of_last_edit, existing_dir, existing_file,
-                               find_assets, find_files)
+from yamldoc.util.file import (count_lines, date_of_last_edit, existing_dir,
+                               existing_file, find_assets, find_files)
 from yamldoc.util.misc import Raw, field_order_fn, unique_alphabetizer
 from yamlwrap import dump, load, transform
 
@@ -262,8 +262,7 @@ class RawTextEditingCommand(_RawTextCommand):
             line = 1
             if (self._should_open_file_at_end(template)
                     and os.path.exists(select_file)):
-                with open(select_file, mode='r', encoding='utf-8') as f:
-                    line = sum(1 for line in f) + 1
+                line = count_lines(select_file)
 
             subprocess.call(['editor', str(select_file), f'+{line}'])
         else:

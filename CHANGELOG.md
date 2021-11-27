@@ -6,6 +6,9 @@ This log follows the conventions of
 Nothing yet.
 
 ### New
+- When content is added to a source file through a template, and an editor is
+  started to complete that addition, the file is now opened at the start of the
+  new addition, not at the very end.
 - `_append_template` now returns a `bool` so that callers can react to it being
   cancelled.
 

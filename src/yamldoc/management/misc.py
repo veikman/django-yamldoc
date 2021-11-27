@@ -236,10 +236,18 @@ class RawTextEditingCommand(_RawTextCommand):
                 unwrap=False,
                 standardize=False,
                 **kwargs):
+        line = 1
+
         if template:
             if not select_file:
                 logging.error('No filepath for template.')
                 return
+
+            if (self._should_open_file_at_end(template)
+                    and os.path.exists(select_file) and not wrap
+                    and not unwrap):
+                # Prepare to open the file where the new material begins.
+                line = count_lines(select_file) + 1
 
             if not self._append_template(select_file):
                 # Editing aborted or validation failed etc.
@@ -257,11 +265,9 @@ class RawTextEditingCommand(_RawTextCommand):
             unwrap = wrap = True
 
         if select_file and not wrap and not unwrap:
-            # TODO: Rebuild to support opening file at start of recent
-            # programmatic addition to it.
-            line = 1
-            if (self._should_open_file_at_end(template)
+            if (line == 1 and self._should_open_file_at_end(template)
                     and os.path.exists(select_file)):
+                # Prepare to open the file at the very end.
                 line = count_lines(select_file)
 
             subprocess.call(['editor', str(select_file), f'+{line}'])

@@ -8,7 +8,11 @@ Nothing yet.
 ### Changed
 - Adapted to a breaking change upstream (`django-taggit` v2.0.0).
 
-### New
+### Removed
+- Removed all features that were formally deprecated in v1,
+  including all warnings describing how to migrate to their replacements.
+
+### Added
 - When content is added to a source file through a template, and an editor is
   started to complete that addition, the file is now opened at the start of the
   new addition, not at the very end.

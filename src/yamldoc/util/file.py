@@ -28,14 +28,10 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 ###########
 
 import datetime
-import logging
-import os
-import warnings
 from argparse import ArgumentTypeError
-from collections import OrderedDict
 from pathlib import Path
 from subprocess import run
-from typing import Any, Callable, Dict, Generator, Optional
+from typing import Callable, Generator, Optional
 
 from django.db.models import Model
 from yamlwrap import transform as transform_yaml
@@ -71,70 +67,6 @@ def find_assets(
         return
 
     yield from filter(pred, root.glob(pattern))
-
-
-def find_files(root_folder: str,
-               identifier=lambda _: True,
-               single_file=None) -> Generator[str, None, None]:
-    """Generate relative paths of asset files with prefix, under a folder.
-
-    Similar to find_assets, but based on os.walk and strings.
-
-    """
-    warnings.warn(
-        "“yamldoc.util.file.find_files” is deprecated in favour of "
-        "“find_assets”.", DeprecationWarning)
-
-    if single_file:
-        if identifier(single_file):
-            yield single_file
-        return
-
-    for dirpath, _, filenames in os.walk(root_folder):
-        logging.debug('Searching for files in {}.'.format(dirpath))
-        for f in filenames:
-            if identifier(f):
-                yield os.path.join(dirpath, f)
-
-
-def transform(model: Model, raw: str, **kwargs):
-    """Close over a model to mould YAML after that model."""
-    assert model
-
-    # This function uses the internal _meta property and will therefore be
-    # removed in a future major release.
-    warnings.warn(
-        '“yamldoc.util.file.transform” is deprecated in favour of using '
-        '“yamldoc.util.misc.field_order_fn” and “.alphabetize_tags” '
-        'as demonstrated in “yamldoc.management.misc”.', DeprecationWarning)
-
-    def order_assetmap(fragment: Dict[str, Any]) -> OrderedDict:
-        """Produce an ordered dictionary for replacement of a regular one.
-
-        The passed dictionary should correspond to a model instance.
-        The ordering is based on the model’s schema and is meant to simplify
-        human editing of YAML.
-
-        The yaml module saves an OrderedDict as if it were a regular dict,
-        but does respect its ordering, until it is loaded again.
-
-        """
-        ordered = OrderedDict()
-        for f in (f.name for f in model._meta.fields):
-            if f in fragment:
-                ordered[f] = fragment[f]
-        for f in fragment:
-            # Any metadata or raw data not named like database fields.
-            if f not in ordered:
-                ordered[f] = fragment[f]
-
-        if 'tags' in ordered:
-            # Sort alphabetically and remove duplicates.
-            ordered['tags'] = sorted(set(ordered['tags']))
-
-        return ordered
-
-    return transform_yaml(raw, map_fn=order_assetmap, **kwargs)
 
 
 def date_of_last_edit(path: Path) -> datetime.date:

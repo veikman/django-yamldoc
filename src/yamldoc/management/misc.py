@@ -24,18 +24,16 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 
 import logging
 import os
-import re
 import string
 import subprocess
-import warnings
 from argparse import ArgumentParser
 from pathlib import Path
-from typing import Any, Dict, Generator, Optional, Tuple
+from typing import Any, Dict, Generator, Optional
 
 import django.core.management.base
 from yamldoc.util.file import (count_lines, date_of_last_edit, existing_dir,
                                existing_file, find_assets, find_files)
-from yamldoc.util.misc import Raw, field_order_fn, unique_alphabetizer
+from yamldoc.util.misc import Raw
 from yamlwrap import dump, load, transform
 
 
@@ -95,12 +93,7 @@ class _RawTextCommand(LoggingLevelCommand):
 
     def _parse_file(self, filepath: Path) -> Raw:
         logging.debug(f'Parsing {filepath}.')
-        if not isinstance(filepath, Path):
-            warnings.warn(
-                "Passing anything but a Path to "
-                "“yamldoc.management.misc._RawTextCommand._parse_file” "
-                "is deprecated.", DeprecationWarning)
-            filepath = Path(filepath)
+        assert isinstance(filepath, Path)
         return self._deserialize_text(filepath.read_text())
 
     def _serialize_to_text(self, data: Raw, **kwargs) -> str:
@@ -115,20 +108,6 @@ class _RawTextCommand(LoggingLevelCommand):
         return find_assets(select_folder,
                            selection=select_file,
                            pred=self._filepath_is_relevant)
-
-    def _get_files(self, folder=None, file=None, **kwargs) -> Tuple[str, ...]:
-        """Find YAML documents to work on."""
-        warnings.warn(
-            "“yamldoc.management.misc._RawTextCommand._get_files” "
-            "is deprecated in favour of “_get_assets”.", DeprecationWarning)
-        assert folder or file
-        files = tuple(
-            find_files(folder,
-                       single_file=file,
-                       identifier=self._file_identifier))
-        if not files:
-            logging.error('No eligible files.')
-        return files
 
     def _filepath_is_relevant(self, path: Path) -> bool:
         """Return a Boolean for whether or not a found file is relevant.
@@ -147,21 +126,6 @@ class _RawTextCommand(LoggingLevelCommand):
         if self._file_ending and not path.suffix == self._file_ending:
             logging.debug(f"Wrong suffix in file name: {path}.")
             return False
-        return True
-
-    def _file_identifier(self, filename: str):
-        """Return a Boolean for whether or not a found file is relevant."""
-        warnings.warn(
-            "“yamldoc.management.misc._RawTextCommand._file_identifier” "
-            "is deprecated in favour of “_filepath_is_relevant”.",
-            DeprecationWarning)
-        basename = os.path.basename(filename)
-        if self._file_prefix:
-            if not basename.startswith(self._file_prefix):
-                return False
-        if self._file_ending:
-            if not basename.endswith(self._file_ending):
-                return False
         return True
 
 
@@ -313,13 +277,6 @@ class RawTextEditingCommand(_RawTextCommand):
         new_yaml = self._data_from_subject(subject, old_yaml=old_yaml)
         self._write_spec(filepath, self._serialize_to_text(new_yaml))
 
-    def _describe(self, subject, is_update, filepath: str):
-        """Compose a document on a subject."""
-        warnings.warn(
-            "“RawTextEditingCommand._describe” is deprecated "
-            "in favour of “._compose”.", DeprecationWarning)
-        return self._compose(subject, is_update, Path(filepath))
-
     def _data_from_subject(self,
                            subject: Optional[Path],
                            old_yaml=None) -> Dict[str, Any]:
@@ -335,29 +292,6 @@ class RawTextEditingCommand(_RawTextCommand):
         """General manipulation of data, e.g. from Internet searches."""
         pass
 
-    def _transform(self, folder, filepath, **kwargs):
-        """Transform YAML documents for editing or source control."""
-        warnings.warn(
-            "The default implementation of "
-            "“RawTextEditingCommand._transform” is deprecated.",
-            DeprecationWarning)
-        fields = tuple(f.name for f in self._model._meta.fields)
-        field_order = field_order_fn(fields)
-        tag_order = unique_alphabetizer('tags')
-
-        def order_assetmap(raw: Raw):
-            return tag_order(field_order(raw))
-
-        for path in self._get_files(folder=folder, file=filepath):
-            old_yaml = path.read_text()
-            new_yaml = transform(old_yaml,
-                                 dumper=self._serialize_to_text,
-                                 loader=self._deserialize_text,
-                                 map_fn=order_assetmap,
-                                 postdescent_fn=self._data_manipulation,
-                                 **kwargs)
-            self._write_spec(path, new_yaml)
-
     def _write_spec(self, filepath, new_yaml, mode='w'):
         if new_yaml:
             with open(filepath, mode=mode, encoding='utf-8') as f:
@@ -365,18 +299,6 @@ class RawTextEditingCommand(_RawTextCommand):
         else:
             s = 'Abstaining from writing to {}: No change in YAML.'
             logging.info(s.format(filepath))
-
-    def _new_filepath(self, fragment, folder):
-        warnings.warn("“RawTextEditingCommand._new_filepath” is deprecated.",
-                      DeprecationWarning)
-        folder_override, _, filename = os.path.split(fragment)
-        if self._file_prefix:
-            filename = '_'.join((self._file_prefix, filename))
-        filename = f'{filename}.yaml'
-        blacklist = f'[^{self._filename_character_whitelist}]'
-        filename = filename.format(re.sub(blacklist, '', filename))
-        folder = folder_override or folder or self._default_folder
-        return os.path.join(folder, filename)
 
 
 class RawTextRefinementCommand(_RawTextCommand):
@@ -415,20 +337,3 @@ class RawTextRefinementCommand(_RawTextCommand):
             data[key] = date_of_last_edit(filepath)
 
         return data
-
-
-class DocumentRefinementCommand(RawTextRefinementCommand):
-    """A specialist on documents corresponding to single model instances."""
-
-    # This class is too narrow in its focus. Its use is deprecated.
-    # Prefer less object-orientend problem solving.
-
-    def __init__(self, *args, **kwargs):
-        warnings.warn(
-            "“yamldoc.management.misc.DocumentRefinementCommand” "
-            "is deprecated.", DeprecationWarning)
-        super().__init__(*args, **kwargs)
-
-    def _parse_file(self, filepath: Path):
-        """Ensure there’s a date of last update on parsing file."""
-        return self._note_date_updated(super()._parse_file(filepath), filepath)

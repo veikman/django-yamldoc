@@ -20,17 +20,15 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 """
 
 from collections import OrderedDict as OD
-from dataclasses import dataclass
 
 import django.template.defaultfilters
+import yaml
 from django.db.models import AutoField, Model, TextField
 from django.test import TestCase
-import yaml
 
 from yamldoc.models import Document, MarkupField
-from yamldoc.util.file import transform
 from yamldoc.util.markup import Inline
-from yamldoc.util.misc import slugify, field_order_fn, unique_alphabetizer
+from yamldoc.util.misc import field_order_fn, slugify, unique_alphabetizer
 from yamldoc.util.placeholder import lacuna
 from yamldoc.util.placeholder import map as placemap
 from yamldoc.util.resolution import combo, map_resolver, markdown_on_string
@@ -260,45 +258,6 @@ class _StructuralTransformation(TestCase):
             'z': [1, 2]
         },
                               contents_affected=True)
-
-
-class _LegacyStructuralTransformation(TestCase):
-    class _PseudoModel():
-        class _meta():
-            @dataclass
-            class _PseudoField():
-                name: str
-
-            fields = (_PseudoField('a'), _PseudoField('c'), _PseudoField('b'))
-
-    def _check_str_roundtrip(self, input_, oracle):
-        # When order is disregarded, input_ matches oracle.
-        self.assertEqual(yaml.safe_load(input_), yaml.safe_load(oracle))
-
-        # When order is regarded, input_ does not match oracle.
-        self.assertNotEqual(input_, oracle)
-        self.assertNotEqual(OD(yaml.safe_load(input_)),
-                            OD(yaml.safe_load(oracle)))
-
-        # Perform operation.
-        ret = transform(self._PseudoModel, input_)
-
-        # Order is established.
-        self.assertEqual(ret, oracle)
-        self.assertEqual(OD(yaml.safe_load(ret)), OD(yaml.safe_load(oracle)))
-
-    def test_sort_single_object_with_model(self):
-        self._check_str_roundtrip(('b: 2\n'
-                                   'a: 1\n'
-                                   'c: 3'), ('a: 1\n'
-                                             'c: 3\n'
-                                             'b: 2\n'))
-
-    def test_sort_list(self):
-        # Have transform() descend through a list.
-        o = ('- b: 2\n' '  a: 1\n' '- c: 3\n')
-        ref = ('- a: 1\n' '  b: 2\n' '- c: 3\n')
-        self.assertEqual(ref, transform(self._PseudoModel, o))
 
 
 class _ExplicitFieldSelection(TestCase):

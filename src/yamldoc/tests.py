@@ -43,27 +43,28 @@ class ConcreteDocument(Document):
 
 class _UpstreamCharacterization(TestCase):
     """Tests of Django’s behaviour, irrespective of yamldoc."""
-
     def test_meta_string(self):
         # Check that Django disallows a novel metadata property.
         with self.assertRaises(TypeError):
+
             class M(Model):
                 id = AutoField(primary_key=True)
                 field = TextField()
 
                 class Meta():
-                    fields_with_markup = ('field',)
+                    fields_with_markup = ('field', )
 
     def test_meta_field(self):
         # Like test_meta_string but with a Field instance.
         textfield = TextField()
         with self.assertRaises(TypeError):
+
             class M(Model):
                 id = AutoField(primary_key=True)
                 field = textfield
 
                 class Meta():
-                    fields_with_markup = (textfield,)
+                    fields_with_markup = (textfield, )
 
     def test_composition_equality(self):
         # Adding a non-metadata non-field member to a model should work.
@@ -71,21 +72,19 @@ class _UpstreamCharacterization(TestCase):
             id = AutoField(primary_key=True)
             field = TextField()
 
-            fields_with_markup = (field,)
+            fields_with_markup = (field, )
 
         # Django is expected to wrap M.field, so that it is not equivalent to
         # field.
-        self.assertNotEqual(M.fields_with_markup, (M.field,))
+        self.assertNotEqual(M.fields_with_markup, (M.field, ))
 
         # Penetrating Django’s DeferredAttribute wrapper should fix that.
-        self.assertEqual([f for f in M.fields_with_markup],
-                         [M.field.field])
+        self.assertEqual([f for f in M.fields_with_markup], [M.field.field])
         self.assertEqual([f.name for f in M.fields_with_markup],
                          [M.field.field.name])
 
 
 class _CookingMarkdown(TestCase):
-
     def test_two_single_line_paragraphs(self):
         s = 'Line 1.\n\nLine 2.'
         ref = '<p>Line 1.</p>\n<p>Line 2.</p>'
@@ -100,14 +99,11 @@ class _CookingMarkdown(TestCase):
 
     def test_major_indentation_is_noted(self):
         s = 'Line 1.\n\n    Line 2.'
-        ref = ('<p>Line 1.</p>\n'
-               '<pre><code>Line 2.\n</code></pre>')
+        ref = ('<p>Line 1.</p>\n' '<pre><code>Line 2.\n</code></pre>')
         self.assertEqual(ref, markdown_on_string(s))
 
     def test_flat_sparse_bullet_list(self):
-        s = ('* Bullet A.\n'
-             '\n'
-             '* Bullet B.')
+        s = ('* Bullet A.\n' '\n' '* Bullet B.')
         ref = ('<ul>\n'
                '<li>\n'
                '<p>Bullet A.</p>\n'
@@ -119,19 +115,13 @@ class _CookingMarkdown(TestCase):
         self.assertEqual(ref, markdown_on_string(s))
 
     def test_flat_dense_bullet_list(self):
-        s = ('* Bullet A.\n'
-             '* Bullet B.')
-        ref = ('<ul>\n'
-               '<li>Bullet A.</li>\n'
-               '<li>Bullet B.</li>\n'
-               '</ul>')
+        s = ('* Bullet A.\n' '* Bullet B.')
+        ref = ('<ul>\n' '<li>Bullet A.</li>\n' '<li>Bullet B.</li>\n' '</ul>')
         self.assertEqual(ref, markdown_on_string(s))
 
     def test_nested_sparse_bullet_list(self):
         # As with <pre> above, this needs four spaces of indentation.
-        s = ('* Bullet Aa.\n'
-             '\n'
-             '    * Bullet Ab.')
+        s = ('* Bullet Aa.\n' '\n' '    * Bullet Ab.')
         ref = ('<ul>\n'
                '<li>\n'
                '<p>Bullet Aa.</p>\n'
@@ -143,8 +133,7 @@ class _CookingMarkdown(TestCase):
         self.assertEqual(ref, markdown_on_string(s))
 
     def test_nested_dense_bullet_list(self):
-        s = ('* Bullet A.\n'
-             '    * Bullet B.')
+        s = ('* Bullet A.\n' '    * Bullet B.')
         ref = ('<ul>\n'
                '<li>Bullet A.<ul>\n'
                '<li>Bullet B.</li>\n'
@@ -155,7 +144,6 @@ class _CookingMarkdown(TestCase):
 
 
 class _CookingInternalMarkup(TestCase):
-
     def test_multiline(self):
         def mask(s):
             return s
@@ -172,8 +160,11 @@ class _CookingInternalMarkup(TestCase):
 
 
 class _StructuralTransformation(TestCase):
-
-    def _check_roundtrip(self, fof, input_, oracle, contents_affected=False,
+    def _check_roundtrip(self,
+                         fof,
+                         input_,
+                         oracle,
+                         contents_affected=False,
                          change=True):
         if not contents_affected:
             # When order is disregarded, input_ matches oracle.
@@ -191,58 +182,98 @@ class _StructuralTransformation(TestCase):
         self.assertEqual(OD(ret), OD(oracle))
 
     def test_nokeys(self):
-        self._check_roundtrip(field_order_fn(()),
-                              {'a': 1, 'b': 1}, {'a': 1, 'b': 1},
+        self._check_roundtrip(field_order_fn(()), {
+            'a': 1,
+            'b': 1
+        }, {
+            'a': 1,
+            'b': 1
+        },
                               change=False)
 
     def test_onekey(self):
-        self._check_roundtrip(field_order_fn(('b',)),
-                              {'a': 1, 'b': 1}, {'b': 1, 'a': 1})
-        self._check_roundtrip(field_order_fn(('a',)),
-                              {'a': 1, 'b': 1}, {'a': 1, 'b': 1},
+        self._check_roundtrip(field_order_fn(('b', )), {
+            'a': 1,
+            'b': 1
+        }, {
+            'b': 1,
+            'a': 1
+        })
+        self._check_roundtrip(field_order_fn(('a', )), {
+            'a': 1,
+            'b': 1
+        }, {
+            'a': 1,
+            'b': 1
+        },
                               change=False)
 
     def test_twokey(self):
-        self._check_roundtrip(field_order_fn(('b', 'c')),
-                              {'a': 1, 'b': 1, 'c': 1},
-                              {'b': 1, 'c': 1, 'a': 1})
-        self._check_roundtrip(field_order_fn(('b', 'c')),
-                              {'a': 1, 'b': 1, 'c': 1, 'd': 1},
-                              {'b': 1, 'c': 1, 'a': 1, 'd': 1})
+        self._check_roundtrip(field_order_fn(('b', 'c')), {
+            'a': 1,
+            'b': 1,
+            'c': 1
+        }, {
+            'b': 1,
+            'c': 1,
+            'a': 1
+        })
+        self._check_roundtrip(field_order_fn(('b', 'c')), {
+            'a': 1,
+            'b': 1,
+            'c': 1,
+            'd': 1
+        }, {
+            'b': 1,
+            'c': 1,
+            'a': 1,
+            'd': 1
+        })
 
         # Unreferenced keys go last, with their internal order intact.
-        self._check_roundtrip(field_order_fn(('b', 'c')),
-                              {'c': 1, 'd': 1, 'b': 1, 'a': 1},
-                              {'b': 1, 'c': 1, 'd': 1, 'a': 1})
+        self._check_roundtrip(field_order_fn(('b', 'c')), {
+            'c': 1,
+            'd': 1,
+            'b': 1,
+            'a': 1
+        }, {
+            'b': 1,
+            'c': 1,
+            'd': 1,
+            'a': 1
+        })
 
     def test_composite(self):
-        f0 = field_order_fn(('x',))
+        f0 = field_order_fn(('x', ))
         f1 = unique_alphabetizer('z')
 
         def f(coll):
             return f1(f0(coll))
 
-        self._check_roundtrip(f,
-                              {'a': 1, 'z': [2, 1], 'x': [2, 1]},
-                              {'x': [2, 1], 'a': 1, 'z': [1, 2]},
+        self._check_roundtrip(f, {
+            'a': 1,
+            'z': [2, 1],
+            'x': [2, 1]
+        }, {
+            'x': [2, 1],
+            'a': 1,
+            'z': [1, 2]
+        },
                               contents_affected=True)
 
 
 class _LegacyStructuralTransformation(TestCase):
-
     class _PseudoModel():
         class _meta():
             @dataclass
             class _PseudoField():
                 name: str
-            fields = (_PseudoField('a'),
-                      _PseudoField('c'),
-                      _PseudoField('b'))
+
+            fields = (_PseudoField('a'), _PseudoField('c'), _PseudoField('b'))
 
     def _check_str_roundtrip(self, input_, oracle):
         # When order is disregarded, input_ matches oracle.
-        self.assertEqual(yaml.safe_load(input_),
-                         yaml.safe_load(oracle))
+        self.assertEqual(yaml.safe_load(input_), yaml.safe_load(oracle))
 
         # When order is regarded, input_ does not match oracle.
         self.assertNotEqual(input_, oracle)
@@ -254,25 +285,19 @@ class _LegacyStructuralTransformation(TestCase):
 
         # Order is established.
         self.assertEqual(ret, oracle)
-        self.assertEqual(OD(yaml.safe_load(ret)),
-                         OD(yaml.safe_load(oracle)))
+        self.assertEqual(OD(yaml.safe_load(ret)), OD(yaml.safe_load(oracle)))
 
     def test_sort_single_object_with_model(self):
         self._check_str_roundtrip(('b: 2\n'
                                    'a: 1\n'
-                                   'c: 3'),
-                                  ('a: 1\n'
-                                   'c: 3\n'
-                                   'b: 2\n'))
+                                   'c: 3'), ('a: 1\n'
+                                             'c: 3\n'
+                                             'b: 2\n'))
 
     def test_sort_list(self):
         # Have transform() descend through a list.
-        o = ('- b: 2\n'
-             '  a: 1\n'
-             '- c: 3\n')
-        ref = ('- a: 1\n'
-               '  b: 2\n'
-               '- c: 3\n')
+        o = ('- b: 2\n' '  a: 1\n' '- c: 3\n')
+        ref = ('- a: 1\n' '  b: 2\n' '- c: 3\n')
         self.assertEqual(ref, transform(self._PseudoModel, o))
 
 
@@ -288,12 +313,12 @@ class _ExplicitFieldSelection(TestCase):
     def test_fair_weather(self):
         class SmallExplicitDocument(Document):
 
-            fields_with_markup = (Document.body.field,)
+            fields_with_markup = (Document.body.field, )
 
         # The summary field, which is a MarkupField, should not appear.
-        self.assertEqual((SmallExplicitDocument.body.field,),
+        self.assertEqual((SmallExplicitDocument.body.field, ),
                          SmallExplicitDocument.fields_with_markup)
-        self.assertEqual((SmallExplicitDocument.body.field,),
+        self.assertEqual((SmallExplicitDocument.body.field, ),
                          get_explicit_fields(SmallExplicitDocument))
 
     def test_novel_class(self):
@@ -302,8 +327,7 @@ class _ExplicitFieldSelection(TestCase):
             epigraph = MarkupField()
 
             # Check various ways to refer to fields.
-            fields_with_markup = (Document.body.field,
-                                  epigraph,
+            fields_with_markup = (Document.body.field, epigraph,
                                   Document._meta.get_field('summary'))
 
         self.assertEqual((LargeExplicitDocument.body.field,
@@ -318,18 +342,18 @@ class _ClassBasedFieldSelection(TestCase):
             classbased_selector({})
 
     def test_mismatch(self):
-        f = classbased_selector((int,))
+        f = classbased_selector((int, ))
         self.assertEqual(f(ConcreteDocument), ())
 
     def test_fair_weather(self):
-        f = classbased_selector((MarkupField,))
-        self.assertEqual(f(ConcreteDocument),
-                         tuple(f for f in ConcreteDocument._meta.fields
-                               if f.name in {'summary', 'ingress', 'body'}))
+        f = classbased_selector((MarkupField, ))
+        self.assertEqual(
+            f(ConcreteDocument),
+            tuple(f for f in ConcreteDocument._meta.fields
+                  if f.name in {'summary', 'ingress', 'body'}))
 
 
 class _CookingSite(TestCase):
-
     def test_chain(self):
         raws = dict(title='Cove, Oregon',
                     body='**Cove** is a city\nin Union County.\n',
@@ -338,7 +362,8 @@ class _CookingSite(TestCase):
         doc = ConcreteDocument.create(**raws)
 
         ref = '**Cove** is a city\nin Union County.\n'
-        self.assertEqual(ref, doc.body,
+        self.assertEqual(ref,
+                         doc.body,
                          msg='Text mutated in document creation.')
 
         list(map_resolver(combo))
@@ -356,7 +381,6 @@ class _CookingSite(TestCase):
 
 
 class _Other(TestCase):
-
     def _compose(self, base):
         # Trivial semi-realistic template production.
         composite = dict(key=base)
@@ -398,9 +422,7 @@ class _Other(TestCase):
 
     def test_markdown_multiline(self):
         s = ('# A', '', '## a', '', '* li', '', 'p', '')
-        ref = ('<h1 id="a">A</h1>', '<h2 id="a_1">a</h2>',
-               '<ul>', '<li>li</li>', '</ul>',
-               '<p>p</p>')
+        ref = ('<h1 id="a">A</h1>', '<h2 id="a_1">a</h2>', '<ul>',
+               '<li>li</li>', '</ul>', '<p>p</p>')
 
-        self.assertEqual('\n'.join(ref),
-                         markdown_on_string('\n'.join(s)))
+        self.assertEqual('\n'.join(ref), markdown_on_string('\n'.join(s)))

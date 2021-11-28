@@ -34,7 +34,6 @@ from django.template.defaultfilters import slugify as default_slugify
 # INTERFACE FUNCTIONS #
 #######################
 
-
 # Raw represents data for a Django model, stored in serialized text format.
 Raw = Dict[str, Any]
 
@@ -95,6 +94,7 @@ def field_order_fn(fields: Tuple[str],
             except KeyError:
                 pass
         return finalizer(fragment, ordered)
+
     return order
 
 
@@ -105,6 +105,7 @@ def unique_alphabetizer(key: str):
         if key in fragment:
             fragment[key] = sorted(set(fragment[key]))
         return fragment
+
     return order
 
 

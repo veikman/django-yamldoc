@@ -31,14 +31,12 @@ from yamldoc.models import MarkupField
 # LOCAL COMPOUND TYPES #
 ########################
 
-
 ACL = FrozenSet[Union[Type[Model], str]]  # Access control list.
 FieldSelector = Callable[[Type[Model]], Tuple[Field]]
 Identifier = Callable[[Type[Model]], Hashable]
 Node = Tuple[Model, str, Optional[str]]
 Screen = Callable[[Type[Model]], bool]
 Traversal = Generator[Node, None, None]
-
 
 ############
 # INTERNAL #
@@ -81,13 +79,14 @@ def classbased_selector(allowlist: Tuple[Type[Field]]):
             return get_explicit_fields(model)
         except AttributeError:  # No metadata specifically on markup.
             pass  # Fall back to inspection.
-        return tuple(filter(lambda f: isinstance(f, allowlist),
-                            model._meta.get_fields()))
+        return tuple(
+            filter(lambda f: isinstance(f, allowlist),
+                   model._meta.get_fields()))
+
     return field_selector
 
 
-markup_field_selector: FieldSelector = classbased_selector((MarkupField,))
-
+markup_field_selector: FieldSelector = classbased_selector((MarkupField, ))
 
 ###################
 # MODEL SELECTION #
@@ -108,7 +107,8 @@ def qualified_class_name(cls: Type[Model]) -> str:
     return cls.__module__ + "." + cls.__name__
 
 
-def screen_from_acl(allow: ACL = frozenset(), deny: ACL = frozenset(),
+def screen_from_acl(allow: ACL = frozenset(),
+                    deny: ACL = frozenset(),
                     identifier: Identifier = lambda x: x) -> Screen:
     """Define a Screen from mutually exclusive sets of models."""
     assert not (allow and deny)
@@ -123,8 +123,8 @@ def screen_from_acl(allow: ACL = frozenset(), deny: ACL = frozenset(),
     return lambda model: True
 
 
-def screen_from_field_selector(field_selector: FieldSelector =
-                               markup_field_selector) -> Screen:
+def screen_from_field_selector(
+        field_selector: FieldSelector = markup_field_selector) -> Screen:
     """Define a Screen from a preliminary traversal.
 
     By default, the Screen will select those models that have any MarkupField
@@ -149,7 +149,8 @@ def site(**kwargs) -> Traversal:
         yield from app(app_, **kwargs)
 
 
-def app(app_, screen: Screen = screen_from_field_selector(),
+def app(app_,
+        screen: Screen = screen_from_field_selector(),
         field_selector=markup_field_selector) -> Traversal:
     """Traverse fields in the database of one app.
 
@@ -163,9 +164,10 @@ def app(app_, screen: Screen = screen_from_field_selector(),
         yield from model(model_, field_selector)
 
 
-def model(model_: Type[Model],
-          field_selector: Callable[[Type[Model]],
-                                   Tuple[Type[Field]]]) -> Traversal:
+def model(
+        model_: Type[Model],
+        field_selector: Callable[[Type[Model]],
+                                 Tuple[Type[Field]]]) -> Traversal:
     """Traverse selected fields in the database table of passed model."""
     assert field_selector is not None
     field_allowlist: FrozenSet[Field] = frozenset(field_selector(model_))

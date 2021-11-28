@@ -36,13 +36,11 @@ from . import misc
 # CLASSES #
 ###########
 
-
 # A registry for site-internal markup.
 # Multiline support here should be considered unstable. It may be expensive
 # and works poorly with functions that only generate e.g. <span>, without
 # taking paragraphs into account and duplicating the span across each.
 Inline = SignatureShorthand.variant_class(flags=re.DOTALL)
-
 
 #########################
 # REPLACEMENT FUNCTIONS #
@@ -67,16 +65,17 @@ def br(subject: Optional[Model] = None):
     return '<br />'
 
 
-def media(path_fragment, subject: Optional[Model] = None,
-          label: Optional[str] = None, transclude: Optional[bool] = None):
+def media(path_fragment,
+          subject: Optional[Model] = None,
+          label: Optional[str] = None,
+          transclude: Optional[bool] = None):
     """Link to media."""
     if not label:
         label = path_fragment
 
     if transclude:
         # Produce the full contents of e.g. an SVG file. No label.
-        filepath = os.path.join(django.conf.settings.MEDIA_ROOT,
-                                path_fragment)
+        filepath = os.path.join(django.conf.settings.MEDIA_ROOT, path_fragment)
         try:
             with open(filepath, mode='r', encoding='utf-8') as f:
                 repl = f.read()
@@ -92,7 +91,8 @@ def media(path_fragment, subject: Optional[Model] = None,
     return repl
 
 
-def static(path_fragment: str, subject: Optional[Model] = None,
+def static(path_fragment: str,
+           subject: Optional[Model] = None,
            label: Optional[str] = None):
     """Link to a static file."""
     if not label:

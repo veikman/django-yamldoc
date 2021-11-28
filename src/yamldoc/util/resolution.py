@@ -33,9 +33,7 @@ from yamldoc.util.traverse import Node, site
 # LOCAL COMPOUND TYPES #
 ########################
 
-
 Resolver = Callable[[Model, Optional[str]], Optional[str]]
-
 
 #############
 # TRAVERSAL #
@@ -73,8 +71,7 @@ def markdown_on_string(raw: str) -> str:
     This requires the raw input to be unwrapped already.
 
     """
-    extensions = ['markdown.extensions.footnotes',
-                  'markdown.extensions.toc']
+    extensions = ['markdown.extensions.footnotes', 'markdown.extensions.toc']
     return markdown(raw, extensions=extensions)
 
 

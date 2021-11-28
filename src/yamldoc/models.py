@@ -31,7 +31,6 @@ class MarkupField(models.TextField):
 
 class UploadableMixin():
     """A mix-in for making Django models text-based."""
-
     @classmethod
     @transaction.atomic
     def create_en_masse(cls, raws):
@@ -114,7 +113,6 @@ class UploadableMixin():
 
 class UploadableListMixin(UploadableMixin):
     """A variation for records kept within lists."""
-
     @classmethod
     def _iterate_over_raw_data(cls, raws):
         """Override parent method.
@@ -145,8 +143,10 @@ class Document(models.Model, UploadableMixin):
     # Paths to any JavaScript files needed to present the content.
     scripts = models.TextField()
 
-    parent_object = models.ForeignKey('self', related_name='children',
-                                      null=True, on_delete=models.CASCADE)
+    parent_object = models.ForeignKey('self',
+                                      related_name='children',
+                                      null=True,
+                                      on_delete=models.CASCADE)
 
     class Meta():
         """Model metadata."""

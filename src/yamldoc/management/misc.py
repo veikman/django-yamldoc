@@ -31,10 +31,11 @@ from pathlib import Path
 from typing import Any, Dict, Generator, Optional
 
 import django.core.management.base
+from yamlwrap import dump, load
+
 from yamldoc.util.file import (count_lines, date_of_last_edit, existing_dir,
-                               existing_file, find_assets, find_files)
+                               existing_file, find_assets)
 from yamldoc.util.misc import Raw
-from yamlwrap import dump, load, transform
 
 
 class LoggingLevelCommand(django.core.management.base.BaseCommand):

@@ -34,7 +34,7 @@ from yamldoc.models import MarkupField
 ACL = FrozenSet[Union[Type[Model], str]]  # Access control list.
 FieldSelector = Callable[[Type[Model]], Tuple[Field, ...]]
 Identifier = Callable[[Type[Model]], Hashable]
-Node = Tuple[Model, str, Optional[str]]
+Node = Tuple[Model, Field, Optional[str]]
 Screen = Callable[[Type[Model]], bool]
 Traversal = Generator[Node, None, None]
 

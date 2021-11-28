@@ -5,6 +5,9 @@ This log follows the conventions of
 ## [Unreleased]
 Nothing yet.
 
+### Changed
+- Adapted to a breaking change upstream (`django-taggit` v2.0.0).
+
 ### New
 - When content is added to a source file through a template, and an editor is
   started to complete that addition, the file is now opened at the start of the

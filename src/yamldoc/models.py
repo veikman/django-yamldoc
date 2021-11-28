@@ -107,7 +107,7 @@ class UploadableMixin():
         slug = slugify(title)
         new = cls.objects.create(title=title, slug=slug, **kwargs)
         if tags:
-            new.tags.set(*tags)
+            new.tags.set(tags)
         return new
 
 

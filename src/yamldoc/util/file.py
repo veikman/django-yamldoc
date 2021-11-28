@@ -33,7 +33,6 @@ from pathlib import Path
 from subprocess import run
 from typing import Callable, Generator, Optional
 
-from django.db.models import Model
 from yamlwrap import transform as transform_yaml
 
 #######################

@@ -20,7 +20,7 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 """
 
 from typing import (Callable, FrozenSet, Generator, Hashable, Optional, Tuple,
-                    Type, Union)
+                    Type, Union, cast)
 
 import django.apps
 from django.db.models import Field, Model
@@ -32,7 +32,7 @@ from yamldoc.models import MarkupField
 ########################
 
 ACL = FrozenSet[Union[Type[Model], str]]  # Access control list.
-FieldSelector = Callable[[Type[Model]], Tuple[Field]]
+FieldSelector = Callable[[Type[Model]], Tuple[Field, ...]]
 Identifier = Callable[[Type[Model]], Hashable]
 Node = Tuple[Model, str, Optional[str]]
 Screen = Callable[[Type[Model]], bool]
@@ -41,6 +41,11 @@ Traversal = Generator[Node, None, None]
 ############
 # INTERNAL #
 ############
+
+
+def _identityfier(m: Type[Model]) -> Hashable:
+    """Act as a type-annotated identity function and Identifier."""
+    return cast(Hashable, m)
 
 
 def _apps_from_site():
@@ -52,7 +57,7 @@ def _apps_from_site():
 ###################
 
 
-def get_explicit_fields(model: Model) -> Tuple[Type[Field]]:
+def get_explicit_fields(model: Model) -> Tuple[Type[Field], ...]:
     """Identify fields on passed model that may contain cookable markup.
 
     Interesting fields are found through an explicit opt-in
@@ -70,11 +75,11 @@ def get_explicit_fields(model: Model) -> Tuple[Type[Field]]:
     return model.fields_with_markup
 
 
-def classbased_selector(allowlist: Tuple[Type[Field]]):
+def classbased_selector(allowlist: Tuple[Type[Field], ...]):
     """Close over an allowlist as a fallback to get_explicit_fields."""
     assert allowlist  # isinstance does not accept an empty tuple.
 
-    def field_selector(model: Model) -> Tuple[Field]:
+    def field_selector(model: Model) -> Tuple[Field, ...]:
         try:
             return get_explicit_fields(model)
         except AttributeError:  # No metadata specifically on markup.
@@ -109,7 +114,7 @@ def qualified_class_name(cls: Type[Model]) -> str:
 
 def screen_from_acl(allow: ACL = frozenset(),
                     deny: ACL = frozenset(),
-                    identifier: Identifier = lambda x: x) -> Screen:
+                    identifier: Identifier = _identityfier) -> Screen:
     """Define a Screen from mutually exclusive sets of models."""
     assert not (allow and deny)
 

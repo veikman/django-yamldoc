@@ -1,0 +1,13 @@
+[tool.isort]
+known_first_party = ["yamldoc"]
+
+[[tool.mypy.overrides]]
+module = [
+    "django.*",
+    "invoke.*",
+    "markdown.*",
+    "ovid.*",
+    "yaml.*",
+    "yamlwrap.*",
+]
+ignore_missing_imports = true

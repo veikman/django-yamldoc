@@ -33,8 +33,6 @@ from pathlib import Path
 from subprocess import run
 from typing import Callable, Generator, Optional
 
-from yamlwrap import transform as transform_yaml
-
 #######################
 # INTERFACE FUNCTIONS #
 #######################

@@ -28,10 +28,10 @@ import string
 import subprocess
 from argparse import ArgumentParser
 from pathlib import Path
-from typing import Any, Dict, Generator, Optional
+from typing import Any, Dict, Generator, Iterable, Optional
 
 import django.core.management.base
-from yamlwrap import dump, load
+from yamlwrap import dump, load, transform
 
 from yamldoc.util.file import (count_lines, date_of_last_edit, existing_dir,
                                existing_file, find_assets)
@@ -237,12 +237,9 @@ class RawTextEditingCommand(_RawTextCommand):
 
             subprocess.call(['editor', str(select_file), f'+{line}'])
         else:
-            if not wrap or unwrap or select_file:
-                logging.info('Transforming all without standardization.')
-            self._transform(select_folder,
-                            select_file,
-                            unwrap=unwrap,
-                            wrap=wrap)
+            for path in self._get_assets(select_folder=select_folder,
+                                         select_file=select_file):
+                self._transform(unwrap, wrap, path)
 
     def _should_open_editor(self):
         """Determine whether to open a text editor. A stub."""
@@ -289,17 +286,28 @@ class RawTextEditingCommand(_RawTextCommand):
         """
         raise NotImplementedError
 
-    def _data_manipulation(self, data):
-        """General manipulation of data, e.g. from Internet searches."""
-        pass
+    def _write_spec(self, path: Path, new_yaml: Optional[str], mode='w'):
+        if not new_yaml:
+            logging.info(f'Not writing to {path}: No new YAML.')
+            return
+        with path.open(mode=mode) as f:
+            f.write(new_yaml)
 
-    def _write_spec(self, filepath, new_yaml, mode='w'):
-        if new_yaml:
-            with open(filepath, mode=mode, encoding='utf-8') as f:
-                f.write(new_yaml)
-        else:
-            s = 'Abstaining from writing to {}: No change in YAML.'
-            logging.info(s.format(filepath))
+    def _transform(self, unwrap: bool, wrap: bool, path: Path, **kwargs):
+        """Transform the contents of one YAML file.
+
+        If contents are changed, rewrite the file in place.
+
+        """
+        logging.debug(f'Transforming {path}.')
+        assert path.is_file()
+        new = transform(path.read_text(),
+                        unwrap=unwrap,
+                        wrap=wrap,
+                        load=self._deserialize_text,
+                        dumper=self._serialize_to_text,
+                        **kwargs)
+        self._write_spec(path, new)
 
 
 class RawTextRefinementCommand(_RawTextCommand):

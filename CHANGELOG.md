@@ -6,16 +6,21 @@ This log follows the conventions of
 Nothing yet.
 
 ### Changed
-- Adapted to a breaking change upstream (`django-taggit` v2.0.0).
+- Adapted to a breaking change upstream (`django-taggit` v2.0.0; not a
+  dependency of `yamldoc` but passively supported).
+- Replaced the signature of the `_transform` method to treat one file
+  instead of many and to cease reordering contents by default.
 
 ### Removed
 - Removed all features that were formally deprecated in v1,
   including all warnings describing how to migrate to their replacements.
+    - Exception: The `_transform` function was replaced as noted above.
+- Removed the `_data_manipulation` method, a no-op unused within `yamldoc`.
 
 ### Added
 - When content is added to a source file through a template, and an editor is
   started to complete that addition, the file is now opened at the start of the
-  new addition, not at the very end.
+  new addition, not at the very end. This still uses Vi-like CLI syntax only.
 - `_append_template` now returns a `bool` so that callers can react to it being
   cancelled.
 

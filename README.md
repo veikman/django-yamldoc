@@ -14,6 +14,11 @@ long. However, `yamldoc` is probably of no interest to you. Its architecture
 is less elegant than the average Django app, mixing various concerns united
 only by the theme of refining YAML to HTML via quearyable SQL.
 
+`yamldoc` is currently marked as compatible with `markdown < 3.3`. The two
+packages are in fact still compatible at >= 3.3, but `markdown` performance
+with large blocks of HTML was degraded in 3.3. This is relevant to `yamldoc`
+and unsolved as of version 3.3.6, hence the soft block.
+
 ## History
 
 `yamldoc` was originally called `vedm` for “Viktor Eikman’s Django miscellania”.

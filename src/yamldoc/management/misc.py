@@ -304,7 +304,7 @@ class RawTextEditingCommand(_RawTextCommand):
         new = transform(path.read_text(),
                         unwrap=unwrap,
                         wrap=wrap,
-                        load=self._deserialize_text,
+                        loader=self._deserialize_text,
                         dumper=self._serialize_to_text,
                         **kwargs)
         self._write_spec(path, new)

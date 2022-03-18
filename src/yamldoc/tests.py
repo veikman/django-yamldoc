@@ -22,7 +22,6 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 from collections import OrderedDict as OD
 
 import django.template.defaultfilters
-import yaml
 from django.db.models import AutoField, Model, TextField
 from django.test import TestCase
 
@@ -36,11 +35,14 @@ from yamldoc.util.traverse import classbased_selector, get_explicit_fields
 
 
 class ConcreteDocument(Document):
+    """A test-only implementation."""
+
     id = AutoField(primary_key=True)
 
 
 class _UpstreamCharacterization(TestCase):
     """Tests of Django’s behaviour, irrespective of yamldoc."""
+
     def test_meta_string(self):
         # Check that Django disallows a novel metadata property.
         with self.assertRaises(TypeError):
@@ -83,6 +85,7 @@ class _UpstreamCharacterization(TestCase):
 
 
 class _CookingMarkdown(TestCase):
+
     def test_two_single_line_paragraphs(self):
         s = 'Line 1.\n\nLine 2.'
         ref = '<p>Line 1.</p>\n<p>Line 2.</p>'
@@ -97,11 +100,14 @@ class _CookingMarkdown(TestCase):
 
     def test_major_indentation_is_noted(self):
         s = 'Line 1.\n\n    Line 2.'
-        ref = ('<p>Line 1.</p>\n' '<pre><code>Line 2.\n</code></pre>')
+        ref = ('<p>Line 1.</p>\n'
+               '<pre><code>Line 2.\n</code></pre>')
         self.assertEqual(ref, markdown_on_string(s))
 
     def test_flat_sparse_bullet_list(self):
-        s = ('* Bullet A.\n' '\n' '* Bullet B.')
+        s = ('* Bullet A.\n'
+             '\n'
+             '* Bullet B.')
         ref = ('<ul>\n'
                '<li>\n'
                '<p>Bullet A.</p>\n'
@@ -113,13 +119,19 @@ class _CookingMarkdown(TestCase):
         self.assertEqual(ref, markdown_on_string(s))
 
     def test_flat_dense_bullet_list(self):
-        s = ('* Bullet A.\n' '* Bullet B.')
-        ref = ('<ul>\n' '<li>Bullet A.</li>\n' '<li>Bullet B.</li>\n' '</ul>')
+        s = ('* Bullet A.\n'
+             '* Bullet B.')
+        ref = ('<ul>\n'
+               '<li>Bullet A.</li>\n'
+               '<li>Bullet B.</li>\n'
+               '</ul>')
         self.assertEqual(ref, markdown_on_string(s))
 
     def test_nested_sparse_bullet_list(self):
         # As with <pre> above, this needs four spaces of indentation.
-        s = ('* Bullet Aa.\n' '\n' '    * Bullet Ab.')
+        s = ('* Bullet Aa.\n'
+             '\n'
+             '    * Bullet Ab.')
         ref = ('<ul>\n'
                '<li>\n'
                '<p>Bullet Aa.</p>\n'
@@ -131,7 +143,8 @@ class _CookingMarkdown(TestCase):
         self.assertEqual(ref, markdown_on_string(s))
 
     def test_nested_dense_bullet_list(self):
-        s = ('* Bullet A.\n' '    * Bullet B.')
+        s = ('* Bullet A.\n'
+             '    * Bullet B.')
         ref = ('<ul>\n'
                '<li>Bullet A.<ul>\n'
                '<li>Bullet B.</li>\n'
@@ -142,7 +155,9 @@ class _CookingMarkdown(TestCase):
 
 
 class _CookingInternalMarkup(TestCase):
+
     def test_multiline(self):
+
         def mask(s):
             return s
 
@@ -158,6 +173,7 @@ class _CookingInternalMarkup(TestCase):
 
 
 class _StructuralTransformation(TestCase):
+
     def _check_roundtrip(self,
                          fof,
                          input_,
@@ -261,6 +277,7 @@ class _StructuralTransformation(TestCase):
 
 
 class _ExplicitFieldSelection(TestCase):
+
     def test_absence_of_data_abstract(self):
         with self.assertRaises(AttributeError):
             get_explicit_fields(Document)
@@ -270,6 +287,7 @@ class _ExplicitFieldSelection(TestCase):
             get_explicit_fields(ConcreteDocument)
 
     def test_fair_weather(self):
+
         class SmallExplicitDocument(Document):
 
             fields_with_markup = (Document.body.field, )
@@ -281,6 +299,7 @@ class _ExplicitFieldSelection(TestCase):
                          get_explicit_fields(SmallExplicitDocument))
 
     def test_novel_class(self):
+
         class LargeExplicitDocument(Document):
 
             epigraph = MarkupField()
@@ -296,6 +315,7 @@ class _ExplicitFieldSelection(TestCase):
 
 
 class _ClassBasedFieldSelection(TestCase):
+
     def test_minimal(self):
         with self.assertRaises(AssertionError):
             classbased_selector({})
@@ -313,6 +333,7 @@ class _ClassBasedFieldSelection(TestCase):
 
 
 class _CookingSite(TestCase):
+
     def test_chain(self):
         raws = dict(title='Cove, Oregon',
                     body='**Cove** is a city\nin Union County.\n',
@@ -340,6 +361,7 @@ class _CookingSite(TestCase):
 
 
 class _Other(TestCase):
+
     def _compose(self, base):
         # Trivial semi-realistic template production.
         composite = dict(key=base)

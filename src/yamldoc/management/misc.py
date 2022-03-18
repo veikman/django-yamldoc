@@ -28,7 +28,7 @@ import string
 import subprocess
 from argparse import ArgumentParser
 from pathlib import Path
-from typing import Any, Dict, Generator, Iterable, Optional
+from typing import Any, Dict, Generator, Optional
 
 import django.core.management.base
 from yamlwrap import dump, load, transform
@@ -40,6 +40,7 @@ from yamldoc.util.misc import Raw
 
 class LoggingLevelCommand(django.core.management.base.BaseCommand):
     """A command that uses Django's verbosity for general logging."""
+
     def handle(self, **kwargs):
         """Adapt Django's standard verbosity argument for general use."""
         logging.basicConfig(level=10 * (4 - kwargs['verbosity']))

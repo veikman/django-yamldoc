@@ -31,6 +31,7 @@ class MarkupField(models.TextField):
 
 class UploadableMixin():
     """A mix-in for making Django models text-based."""
+
     @classmethod
     @transaction.atomic
     def create_en_masse(cls, raws):
@@ -113,6 +114,7 @@ class UploadableMixin():
 
 class UploadableListMixin(UploadableMixin):
     """A variation for records kept within lists."""
+
     @classmethod
     def _iterate_over_raw_data(cls, raws):
         """Override parent method.

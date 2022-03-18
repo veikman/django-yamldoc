@@ -3,7 +3,6 @@ This log follows the conventions of
 [keepachangelog.com](http://keepachangelog.com/). It picks up from version 1.0.0.
 
 ## [Unreleased]
-Nothing yet.
 
 ### Changed
 - Adapted to a breaking change upstream (`django-taggit` v2.0.0; not a

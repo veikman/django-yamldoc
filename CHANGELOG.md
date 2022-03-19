@@ -1,9 +1,12 @@
 # Change log
 This log follows the conventions of
-[keepachangelog.com](http://keepachangelog.com/). It picks up from version 1.0.0.
+[keepachangelog.com](http://keepachangelog.com/). It picks up from version
+1.0.0.
 
 ## [Unreleased]
+Nothing yet.
 
+## [Version 2.0.0] — 2022-03-19
 ### Changed
 - Adapted to a breaking change upstream (`django-taggit` v2.0.0; not a
   dependency of `yamldoc` but passively supported).
@@ -19,7 +22,7 @@ This log follows the conventions of
 ### Added
 - When content is added to a source file through a template, and an editor is
   started to complete that addition, the file is now opened at the start of the
-  new addition, not at the very end. This still uses Vi-like CLI syntax only.
+  new addition, not at the very end. This uses Vi-like CLI syntax.
 - `_append_template` now returns a `bool` so that callers can react to it being
   cancelled.
 

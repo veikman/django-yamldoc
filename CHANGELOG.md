@@ -89,7 +89,8 @@ Nothing yet.
   from model metadata (where it is not allowed to exist in contemporary
   Django), to direct composition onto the model class.
 
-[Unreleased]: https://github.com/veikman/yamldoc/compare/v1.3.0...HEAD
+[Unreleased]: https://github.com/veikman/yamldoc/compare/v2.0.0...HEAD
+[Version 2.0.0]: https://github.com/veikman/yamldoc/compare/v1.3.0...v2.0.0
 [Version 1.3.0]: https://github.com/veikman/yamldoc/compare/v1.2.0...v1.3.0
 [Version 1.2.0]: https://github.com/veikman/yamldoc/compare/v1.1.0...v1.2.0
 [Version 1.1.0]: https://github.com/veikman/yamldoc/compare/v1.0.2...v1.1.0

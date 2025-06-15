@@ -56,16 +56,19 @@ run = "python src/runtests.py"
 [[tool.hatch.envs.test.matrix]]
 python = ["3.9", "3.10", "3.11"]
 
-[tool.isort]
-known_first_party = ["yamldoc"]
+[tool.ruff]
+line-length = 79
+fix = true
 
-[[tool.mypy.overrides]]
-module = [
-    "django.*",
-    "invoke.*",
-    "markdown.*",
-    "ovid.*",
-    "yaml.*",
-    "yamlwrap.*",
-]
-ignore_missing_imports = true
+[tool.ruff.lint]
+extend-select = ["B", "D", "F", "E", "I", "PL", "W", "UP"]
+extend-ignore = ["D107", "D203", "D213"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["yamldoc"]
+
+[tool.ruff.lint.per-file-ignores]
+"src/yamldoc/tests.py" = ["D100", "D101", "D102"]
+
+[tool.ruff.format]
+quote-style = "single"

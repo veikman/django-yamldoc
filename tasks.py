@@ -9,7 +9,7 @@ from invoke import task
 
 @task()
 def clean(c):
-    """Destroy prior artifacts."""
+    """Destroy prior artifacts, but not all Git-uncontrolled files."""
     c.run('rm -rf build dist src/*.egg-info', warn=True)
     c.run(r'find . | grep -E "(__pycache__|\.pyc|\.pyo$$)" | xargs rm -rf')
 
@@ -17,16 +17,13 @@ def clean(c):
 @task(pre=[clean])
 def build(c):
     """Build wheel in dist/."""
-    c.run('python -m build')
+    c.run('hatch build')
 
 
-@task(pre=[build])
+@task()
 def test(c):
     """Build, install, and then run unit tests."""
-    with c.cd('dist'):
-        c.run('sudo pip install --force-reinstall *.whl')
-    with c.cd('src'):
-        c.run('python runtests.py')
+    c.run('hatch run test:run')
 
 
 @task()

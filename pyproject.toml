@@ -44,6 +44,20 @@ path = "src/yamldoc/__init__.py"
 [tool.hatch.build.targets.wheel]
 packages = ["src/yamldoc"]
 
+[tool.hatch.envs.static]
+dependencies = [
+    "django-types",
+    "mypy",
+    "types-Markdown",
+    "types-invoke",
+]
+[tool.hatch.envs.static.scripts]
+type = "mypy ."
+check_ast = "ruff check --no-fix"
+fix_ast = "ruff check --fix --unsafe-fixes"
+check_nonast = "ruff format --check"
+fix_nonast = "ruff format"
+
 [tool.hatch.envs.test]
 dependencies = [
     "django",
@@ -58,7 +72,6 @@ python = ["3.9", "3.10", "3.11"]
 
 [tool.ruff]
 line-length = 79
-fix = true
 
 [tool.ruff.lint]
 extend-select = ["B", "D", "F", "E", "I", "PL", "W", "UP"]
@@ -72,3 +85,10 @@ known-first-party = ["yamldoc"]
 
 [tool.ruff.format]
 quote-style = "single"
+
+[[tool.mypy.overrides]]
+module = [
+    "ovid.*",
+    "yamlwrap.*",
+]
+ignore_missing_imports = true

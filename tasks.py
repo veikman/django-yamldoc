@@ -21,8 +21,25 @@ def build(c):
 
 
 @task()
+def static(c, fix=False):
+    """Run static analysis, including format and type checks.
+
+    With -f, apply all available automatic fixes, including unsafe fixes that
+    can affect the abstract syntax tree (AST).
+
+    """
+    c.run('hatch run static:type')
+    if fix:
+        c.run('hatch run static:fix_ast')
+        c.run('hatch run static:fix_nonast')
+    else:
+        c.run('hatch run static:check_ast')
+        c.run('hatch run static:check_nonast')
+
+
+@task()
 def test(c):
-    """Build, install, and then run unit tests."""
+    """Run unit tests in supported versions."""
     c.run('hatch run test:run')
 
 

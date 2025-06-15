@@ -4,7 +4,8 @@ This log follows the conventions of
 1.0.0.
 
 ## [Unreleased]
-Nothing yet.
+### Removed
+- Support for Python 3.9 and older. Python 3.9 reaches end of life in 2025-10.
 
 ## [Version 2.0.0] — 2022-03-19
 ### Changed

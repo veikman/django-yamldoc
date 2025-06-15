@@ -28,7 +28,7 @@ import subprocess
 from argparse import ArgumentParser
 from collections.abc import Generator
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 import django.core.management.base
 from yamlwrap import dump, load, transform
@@ -54,9 +54,9 @@ class LoggingLevelCommand(django.core.management.base.BaseCommand):
 class _RawTextCommand(LoggingLevelCommand):
     """Abstract base class for YAML processors."""
 
-    _default_folder: Optional[Path] = None
-    _default_file: Optional[Path] = None
-    _file_prefix: Optional[str] = None
+    _default_folder: Path | None = None
+    _default_file: Path | None = None
+    _file_prefix: str | None = None
     _file_ending = '.yaml'
 
     def add_arguments(self, parser: ArgumentParser):
@@ -283,9 +283,7 @@ class RawTextEditingCommand(_RawTextCommand):
     def _write_template(self, open_file, **kwargs):
         pass
 
-    def _compose(
-        self, subject: Optional[Path], is_update: bool, filepath: Path
-    ):
+    def _compose(self, subject: Path | None, is_update: bool, filepath: Path):
         """Compose a document on a subject."""
         old_yaml = None
         if is_update:
@@ -302,7 +300,7 @@ class RawTextEditingCommand(_RawTextCommand):
         self._write_spec(filepath, self._serialize_to_text(new_yaml))
 
     def _data_from_subject(
-        self, subject: Optional[Path], old_yaml=None
+        self, subject: Path | None, old_yaml=None
     ) -> dict[str, Any]:
         """Update a specification (description) from its actual subject.
 
@@ -312,7 +310,7 @@ class RawTextEditingCommand(_RawTextCommand):
         """
         raise NotImplementedError
 
-    def _write_spec(self, path: Path, new_yaml: Optional[str], mode='w'):
+    def _write_spec(self, path: Path, new_yaml: str | None, mode='w'):
         if not new_yaml:
             logging.info(f'Not writing to {path}: No new YAML.')
             return

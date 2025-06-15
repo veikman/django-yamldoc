@@ -23,7 +23,6 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 import logging
 import os
 import re
-from typing import Optional
 
 import django.conf
 from django.db.models import Model
@@ -49,7 +48,7 @@ Inline = SignatureShorthand.variant_class(flags=re.DOTALL)
 # Call Inline.register on these as needed.
 
 
-def br(subject: Optional[Model] = None):
+def br(subject: Model | None = None):
     """Return a line break.
 
     This is a workaround for the way that pyaml.dump interacts with
@@ -66,9 +65,9 @@ def br(subject: Optional[Model] = None):
 
 def media(
     path_fragment,
-    subject: Optional[Model] = None,
-    label: Optional[str] = None,
-    transclude: Optional[bool] = None,
+    subject: Model | None = None,
+    label: str | None = None,
+    transclude: bool | None = None,
 ):
     """Link to media."""
     if not label:
@@ -94,8 +93,8 @@ def media(
 
 def static(
     path_fragment: str,
-    subject: Optional[Model] = None,
-    label: Optional[str] = None,
+    subject: Model | None = None,
+    label: str | None = None,
 ):
     """Link to a static file."""
     if not label:
@@ -109,6 +108,6 @@ def static(
     return repl
 
 
-def table_of_contents(subject: Optional[Model] = None, heading='Contents'):
+def table_of_contents(subject: Model | None = None, heading='Contents'):
     """Produce Markdown for a TOC with a heading that won’t appear in it."""
     return f'<h2 id="{misc.slugify(heading)}">{heading}</h2>\n[TOC]'

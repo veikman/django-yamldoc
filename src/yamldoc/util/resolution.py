@@ -18,8 +18,8 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 
 """
 
+from collections.abc import Callable
 from functools import partial
-from typing import Callable, Optional
 
 from django.db.models import Model
 from markdown import markdown
@@ -32,7 +32,7 @@ from yamldoc.util.traverse import Node, site
 # LOCAL COMPOUND TYPES #
 ########################
 
-Resolver = Callable[[Model, Optional[str]], Optional[str]]
+Resolver = Callable[[Model, str | None], str | None]
 
 #############
 # TRAVERSAL #

@@ -22,7 +22,8 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 # IMPORTS #
 ###########
 
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 import django.utils.html
 import django.utils.text

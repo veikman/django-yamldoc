@@ -28,10 +28,9 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 
 import datetime
 from argparse import ArgumentTypeError
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 from pathlib import Path
 from subprocess import run
-from typing import Callable, Optional
 
 #######################
 # INTERFACE FUNCTIONS #
@@ -48,7 +47,7 @@ def count_lines(path: Path) -> int:
 def find_assets(
     root: Path,
     pattern: str = '**/*.yaml',
-    selection: Optional[Path] = None,
+    selection: Path | None = None,
     pred: Callable[[Path], bool] = lambda _: True,
 ) -> Generator[Path, None, None]:
     """Generate paths to asset files, recursively globbing a directory.

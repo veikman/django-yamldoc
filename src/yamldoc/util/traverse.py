@@ -19,7 +19,7 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 """
 
 from collections.abc import Callable, Generator, Hashable
-from typing import Optional, TypeGuard, Union, cast
+from typing import TypeGuard, cast
 
 import django.apps
 from django.db.models import Field, ForeignObjectRel, Model
@@ -30,10 +30,10 @@ from yamldoc.models import MarkupField
 # LOCAL COMPOUND TYPES #
 ########################
 
-ACL = frozenset[Union[type[Model], str]]  # Access control list.
+ACL = frozenset[type[Model] | str]  # Access control list.
 FieldSelector = Callable[[Model], tuple[Field, ...]]
 Identifier = Callable[[type[Model]], Hashable]
-Node = tuple[Model, Field, Optional[str]]
+Node = tuple[Model, Field, str | None]
 Screen = Callable[[type[Model]], bool]
 Traversal = Generator[Node, None, None]
 
@@ -163,7 +163,7 @@ def site(**kwargs) -> Traversal:
 
 def app(
     app_,
-    screen: Optional[Screen] = None,
+    screen: Screen | None = None,
     field_selector=markup_field_selector,
 ) -> Traversal:
     """Traverse fields in the database of one app.

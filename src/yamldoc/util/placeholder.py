@@ -26,11 +26,6 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 
 """
 
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from typing import Optional
-
 
 #######################
 # INTERFACE FUNCTIONS #
@@ -52,7 +47,7 @@ def empty_list(**kwargs) -> str:
     return placeholder("\n{}- ''", **kwargs)
 
 
-def map(entries: Optional[list[tuple[str, str]]] = None, **kwargs) -> str:
+def map(entries: list[tuple[str, str]] | None = None, **kwargs) -> str:
     """Produce a placeholder for a map of short strings."""
     if entries is None:
         entries = [('', '')]

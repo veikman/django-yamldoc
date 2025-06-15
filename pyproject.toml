@@ -1,6 +1,60 @@
+[project]
+name = "django-yamldoc"
+description = "Quoins for static sites"
+requires-python = ">=3.9"
+dynamic = ["version"]
+readme = { file = "README.md", content-type = "text/markdown" }
+license-files = ["LICENSE"]
+authors = [
+    { name = "Viktor Eikman", email = "viktor.eikman@gmail.com" },
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Framework :: Django :: 3.0",
+    "Framework :: Django :: 3.1",
+    "Intended Audience :: Developers",
+    "Intended Audience :: System Administrators",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Topic :: Database",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Software Development :: Version Control",
+    "Topic :: Text Editors",
+    "Topic :: Text Processing :: Markup :: Markdown",
+]
+dependencies = [
+    "pyyaml",
+    "markdown < 3.3",
+    "ovid",
+    "pyaml",
+    "unidecode",
+    "yamlwrap",
+]
+
+[project.urls]
+Homepage = "https://github.com/veikman/django-yamldoc"
+
 [build-system]
-requires = ["setuptools", "wheel"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.version]
+path = "src/yamldoc/__init__.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/yamldoc"]
+
+[tool.hatch.envs.test]
+dependencies = [
+    "django",
+    "pytest",
+]
+
+[tool.hatch.envs.test.scripts]
+run = "python src/runtests.py"
+
+[[tool.hatch.envs.test.matrix]]
+python = ["3.9", "3.10", "3.11"]
 
 [tool.isort]
 known_first_party = ["yamldoc"]

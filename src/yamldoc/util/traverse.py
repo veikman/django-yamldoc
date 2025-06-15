@@ -18,11 +18,11 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 
 """
 
-from collections.abc import Generator, Hashable
-from typing import Callable, Optional, Union, cast
+from collections.abc import Callable, Generator, Hashable
+from typing import Optional, TypeGuard, Union, cast
 
 import django.apps
-from django.db.models import Field, Model
+from django.db.models import Field, ForeignObjectRel, Model
 
 from yamldoc.models import MarkupField
 
@@ -31,7 +31,7 @@ from yamldoc.models import MarkupField
 ########################
 
 ACL = frozenset[Union[type[Model], str]]  # Access control list.
-FieldSelector = Callable[[type[Model]], tuple[Field, ...]]
+FieldSelector = Callable[[Model], tuple[Field, ...]]
 Identifier = Callable[[type[Model]], Hashable]
 Node = tuple[Model, Field, Optional[str]]
 Screen = Callable[[type[Model]], bool]
@@ -56,38 +56,40 @@ def _apps_from_site():
 ###################
 
 
-def get_explicit_fields(model: Model) -> tuple[type[Field], ...]:
+def get_explicit_fields(subject_model: Model) -> tuple[Field, ...]:
     """Identify fields on passed model that may contain cookable markup.
 
     Interesting fields are found through an explicit opt-in
     "fields_with_markup" attribute. If no such data is available, raise
     AttributeError.
 
-    Unfortunately, Django model._meta (Meta) is locked down and does not accept
-    this attribute.
+    Unfortunately, Django’s Model._meta (Meta) is locked down and does not
+    accept this attribute.
 
     This function is a workaround for the fact that Django does not support
     reclassing (replacing) fields inherited from third-party parent model
     classes with yamldoc’s MarkupField.
 
     """
-    return model.fields_with_markup
+    return subject_model.fields_with_markup  # type: ignore[attr-defined]
 
 
-def classbased_selector(allowlist: tuple[type[Field], ...]):
+def classbased_selector(
+    allowlist: tuple[type[Field], ...],
+) -> Callable[[Model], tuple[Field, ...]]:
     """Close over an allowlist as a fallback to get_explicit_fields."""
     assert allowlist  # isinstance does not accept an empty tuple.
 
-    def field_selector(model: Model) -> tuple[Field, ...]:
+    def is_allowed(field: Field | ForeignObjectRel) -> TypeGuard[Field]:
+        return isinstance(field, allowlist)
+
+    def field_selector(subject_model: Model) -> tuple[Field, ...]:
         try:
-            return get_explicit_fields(model)
+            return get_explicit_fields(subject_model)
         except AttributeError:  # No metadata specifically on markup.
             pass  # Fall back to inspection.
-        return tuple(
-            filter(
-                lambda f: isinstance(f, allowlist), model._meta.get_fields()
-            )
-        )
+
+        return tuple(filter(is_allowed, subject_model._meta.get_fields()))
 
     return field_selector
 
@@ -161,7 +163,7 @@ def site(**kwargs) -> Traversal:
 
 def app(
     app_,
-    screen: Screen = screen_from_field_selector(),
+    screen: Optional[Screen] = None,
     field_selector=markup_field_selector,
 ) -> Traversal:
     """Traverse fields in the database of one app.
@@ -172,13 +174,15 @@ def app(
     The default field_selector is effectively a no-op.
 
     """
+    if screen is None:
+        screen = screen_from_field_selector()
     for model_ in filter(screen, app_.values()):
         yield from model(model_, field_selector)
 
 
 def model(
     model_: type[Model],
-    field_selector: Callable[[type[Model]], tuple[type[Field]]],
+    field_selector: Callable[[type[Model]], tuple[Field, ...]],
 ) -> Traversal:
     """Traverse selected fields in the database table of passed model."""
     assert field_selector is not None

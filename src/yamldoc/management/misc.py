@@ -206,7 +206,9 @@ class RawTextEditingCommand(_RawTextCommand):
         )
         return action
 
-    def _handle(
+    # _handle has too many arguments. An API-breaking change would be required
+    # to fix this.
+    def _handle(  # noqa: PLR0913
         self,
         select_folder=None,
         select_file=None,

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Miscellaneous utility functions.
 
 Author: Viktor Eikman <viktor.eikman@gmail.com>
@@ -23,7 +22,7 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 # IMPORTS #
 ###########
 
-from typing import Any, Callable, Dict, Tuple
+from typing import Any, Callable
 
 import django.utils.html
 import django.utils.text
@@ -35,7 +34,7 @@ from django.template.defaultfilters import slugify as default_slugify
 #######################
 
 # Raw represents data for a Django model, stored in serialized text format.
-Raw = Dict[str, Any]
+Raw = dict[str, Any]
 
 
 def slugify(string):
@@ -67,8 +66,9 @@ def copy_in_order(a: Raw, b: Raw) -> Raw:
     return b
 
 
-def field_order_fn(fields: Tuple[str],
-                   finalizer: Callable[[Raw, Raw], Raw] = copy_in_order):
+def field_order_fn(
+    fields: tuple[str], finalizer: Callable[[Raw, Raw], Raw] = copy_in_order
+):
     """Close over a mapping function for yamlwrap.
 
     “fields” is expected to be tuple(f.name for f in model._meta.fields) or an
@@ -80,6 +80,7 @@ def field_order_fn(fields: Tuple[str],
     internal order.
 
     """
+
     def order(fragment: Raw) -> Raw:
         """Produce a dictionary for replacement of another.
 
@@ -100,6 +101,7 @@ def field_order_fn(fields: Tuple[str],
 
 def unique_alphabetizer(key: str):
     """Close over a mapping function for yamlwrap."""
+
     def order(fragment: Raw):
         """Sort raw data for a field alphabetically and remove duplicates."""
         if key in fragment:

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 r"""Functions for prepopulating YAML.
 
 For example, to get a YAML document with an empty title field ready to be
@@ -27,7 +26,6 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 
 """
 
-from typing import List, Tuple
 
 #######################
 # INTERFACE FUNCTIONS #
@@ -49,7 +47,7 @@ def empty_list(**kwargs) -> str:
     return placeholder("\n{}- ''", **kwargs)
 
 
-def map(entries: List[Tuple[str, str]] = None, **kwargs) -> str:
+def map(entries: list[tuple[str, str]] = None, **kwargs) -> str:
     """Produce a placeholder for a map of short strings."""
     if entries is None:
         entries = [('', '')]

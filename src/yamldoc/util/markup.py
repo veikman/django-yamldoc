@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Collected utilities for registration and use of text markup.
 
 The site-internal markup supported here is based on Ovid.
@@ -65,10 +64,12 @@ def br(subject: Optional[Model] = None):
     return '<br />'
 
 
-def media(path_fragment,
-          subject: Optional[Model] = None,
-          label: Optional[str] = None,
-          transclude: Optional[bool] = None):
+def media(
+    path_fragment,
+    subject: Optional[Model] = None,
+    label: Optional[str] = None,
+    transclude: Optional[bool] = None,
+):
     """Link to media."""
     if not label:
         label = path_fragment
@@ -77,23 +78,25 @@ def media(path_fragment,
         # Produce the full contents of e.g. an SVG file. No label.
         filepath = os.path.join(django.conf.settings.MEDIA_ROOT, path_fragment)
         try:
-            with open(filepath, mode='r', encoding='utf-8') as f:
+            with open(filepath, encoding='utf-8') as f:
                 repl = f.read()
         except UnicodeDecodeError:
-            logging.error('Failed to read Unicode from {}.'.format(filepath))
+            logging.error(f'Failed to read Unicode from {filepath}.')
             raise
     else:
         # Produce a link.
         root = django.conf.settings.MEDIA_URL
         href = root + path_fragment
-        repl = '<a href="{}">{}</a>'.format(href, label)
+        repl = f'<a href="{href}">{label}</a>'
 
     return repl
 
 
-def static(path_fragment: str,
-           subject: Optional[Model] = None,
-           label: Optional[str] = None):
+def static(
+    path_fragment: str,
+    subject: Optional[Model] = None,
+    label: Optional[str] = None,
+):
     """Link to a static file."""
     if not label:
         label = path_fragment
@@ -101,12 +104,11 @@ def static(path_fragment: str,
     # Produce a link.
     root = django.conf.settings.STATIC_URL
     href = root + path_fragment
-    repl = '<a href="{}">{}</a>'.format(href, label)
+    repl = f'<a href="{href}">{label}</a>'
 
     return repl
 
 
 def table_of_contents(subject: Optional[Model] = None, heading='Contents'):
     """Produce Markdown for a TOC with a heading that won’t appear in it."""
-    return '<h2 id="{s}">{h}</h2>\n[TOC]'.format(s=misc.slugify(heading),
-                                                 h=heading)
+    return f'<h2 id="{misc.slugify(heading)}">{heading}</h2>\n[TOC]'

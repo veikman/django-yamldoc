@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Collected utilities for resolution of text markup.
 
 Author: Viktor Eikman <viktor.eikman@gmail.com>

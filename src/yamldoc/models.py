@@ -29,7 +29,7 @@ class MarkupField(models.TextField):
     """A text field expected to contain markup when first instantiated."""
 
 
-class UploadableMixin():
+class UploadableMixin:
     """A mix-in for making Django models text-based."""
 
     @classmethod
@@ -41,7 +41,7 @@ class UploadableMixin():
         objects have been registered.
 
         """
-        logging.debug('Instantiating {} en masse.'.format(cls))
+        logging.debug(f'Instantiating {cls} en masse.')
         cls._finishing(cls._instantiate_en_masse(raws))
 
     @classmethod
@@ -145,12 +145,11 @@ class Document(models.Model, UploadableMixin):
     # Paths to any JavaScript files needed to present the content.
     scripts = models.TextField()
 
-    parent_object = models.ForeignKey('self',
-                                      related_name='children',
-                                      null=True,
-                                      on_delete=models.CASCADE)
+    parent_object = models.ForeignKey(
+        'self', related_name='children', null=True, on_delete=models.CASCADE
+    )
 
-    class Meta():
+    class Meta:
         """Model metadata."""
 
         abstract = True

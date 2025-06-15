@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Functions for text files of serialized data.
 
 This module is concerned with the maintenance of text for use on Django sites.
@@ -29,9 +28,10 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 
 import datetime
 from argparse import ArgumentTypeError
+from collections.abc import Generator
 from pathlib import Path
 from subprocess import run
-from typing import Callable, Generator, Optional
+from typing import Callable, Optional
 
 #######################
 # INTERFACE FUNCTIONS #
@@ -47,10 +47,10 @@ def count_lines(path: Path) -> int:
 
 def find_assets(
     root: Path,
-    pattern: str = "**/*.yaml",
+    pattern: str = '**/*.yaml',
     selection: Optional[Path] = None,
-    pred: Callable[[Path],
-                   bool] = lambda _: True) -> Generator[Path, None, None]:
+    pred: Callable[[Path], bool] = lambda _: True,
+) -> Generator[Path, None, None]:
     """Generate paths to asset files, recursively globbing a directory.
 
     If a “selection” argument is provided, screen only that path, even if it
@@ -78,7 +78,7 @@ def timestamp_of_last_edit(path: Path) -> float:
 
     """
     cmd = ['git', 'log', '--max-count=1', '--format=%ct', '--', str(path)]
-    git = run(cmd, capture_output=True, cwd=path.parent)
+    git = run(cmd, capture_output=True, cwd=path.parent, check=False)
     if git.stdout and not git.returncode:
         # The output should be the timestamp of committing the last change.
         return float(git.stdout.strip())
@@ -89,7 +89,7 @@ def existing_file(candidate: str):
     """Convert a CLI argument to an absolute file path."""
     path = Path(candidate).resolve()
     if not path.is_file():
-        raise ArgumentTypeError(f"Not a file: {path}")
+        raise ArgumentTypeError(f'Not a file: {path}')
     return path
 
 
@@ -97,5 +97,5 @@ def existing_dir(candidate: str):
     """Convert a CLI argument to an absolute folder path."""
     path = Path(candidate).resolve()
     if not path.is_dir():
-        raise ArgumentTypeError(f"Not a folder: {path}")
+        raise ArgumentTypeError(f'Not a folder: {path}')
     return path

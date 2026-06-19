@@ -4,8 +4,14 @@ This log follows the conventions of
 1.0.0.
 
 ## [Unreleased]
+### Changed
+- The minimum version of `markdown` is now 3.5, for compatibility with Python
+  3.12 and later.
+
 ### Removed
-- Support for Python 3.9 and older. Python 3.9 reaches end of life in 2025-10.
+- Support for Python 3.9 and older. Python 3.9 reached end of life in 2025-10.
+- A maximum version requirement of `markdown` 3.2. This block existed because
+  performance dropped in 3.3, which is now obsolete.
 
 ## [Version 2.0.0] — 2022-03-19
 ### Changed

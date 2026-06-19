@@ -24,7 +24,7 @@ classifiers = [
 ]
 dependencies = [
     "pyyaml",
-    "markdown < 3.3",
+    "markdown>=3.5",
     "ovid",
     "pyaml",
     "unidecode",

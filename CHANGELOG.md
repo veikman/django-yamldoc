@@ -3,10 +3,13 @@ This log follows the conventions of
 [keepachangelog.com](http://keepachangelog.com/). It picks up from version
 1.0.0.
 
-## [Unreleased]
+## [Unchanged]
+Nothing yet.
+
+## [Version 2.0.1] — 2026-06-19
 ### Changed
 - The minimum version of `markdown` is now 3.5, for compatibility with Python
-  3.12 and later.
+  3.12 and later. Earlier versions of `markdown` crash on import.
 
 ### Removed
 - Support for Python 3.9 and older. Python 3.9 reached end of life in 2025-10.
@@ -96,7 +99,8 @@ This log follows the conventions of
   from model metadata (where it is not allowed to exist in contemporary
   Django), to direct composition onto the model class.
 
-[Unreleased]: https://github.com/veikman/yamldoc/compare/v2.0.0...HEAD
+[Unreleased]: https://github.com/veikman/yamldoc/compare/v2.0.1...HEAD
+[Version 2.0.1]: https://github.com/veikman/yamldoc/compare/v2.0.0...v2.0.1
 [Version 2.0.0]: https://github.com/veikman/yamldoc/compare/v1.3.0...v2.0.0
 [Version 1.3.0]: https://github.com/veikman/yamldoc/compare/v1.2.0...v1.3.0
 [Version 1.2.0]: https://github.com/veikman/yamldoc/compare/v1.1.0...v1.2.0

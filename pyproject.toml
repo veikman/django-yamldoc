@@ -68,7 +68,7 @@ dependencies = [
 run = "python src/runtests.py"
 
 [[tool.hatch.envs.test.matrix]]
-python = ["3.10", "3.11"]
+python = ["3.10", "3.11", "3.12", "3.13"]
 
 [tool.ruff]
 line-length = 79
